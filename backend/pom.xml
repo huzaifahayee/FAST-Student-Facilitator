@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  FAST Student Facilitator (FSF)
+  Backend Configuration (pom.xml)
+  
+  What is this file?
+  This is the Project Object Model (POM) file used by Maven to manage this Java project.
+  It tells Maven what dependencies (external libraries) we need, such as Spring Boot,
+  PostgreSQL drivers, and JPA (for database interaction).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 
+      Spring Boot Starter Parent
+      Provides default configurations, property definitions, and dependency versions.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>com.fast</groupId>
+    <artifactId>fsf-backend</artifactId>
+    <version>1.0.0</version>
+    <name>fsf-backend</name>
+    <description>Backend API for FAST Student Facilitator</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <!-- 
+          Spring Web:
+          Allows us to create RESTful APIs and handle HTTP requests (GET, POST, etc.)
+          This is crucial for our React frontend to communicate with the backend.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- 
+          Spring Data JPA:
+          Java Persistence API wrapper by Spring. This makes it easy to interact with 
+          the PostgreSQL database using Java objects (Entities) without writing raw SQL.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- 
+          PostgreSQL Driver:
+          The actual driver that lets our Java code talk to the PostgreSQL database
+          you are currently installing.
+        -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 
+          Spring Security & OAuth2:
+          Mandatory for UC-01/02. This handles the Google Login flow 
+          and ensures only @nu.edu.pk accounts can access the system.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
+        <!-- 
+          Spring Boot Test:
+          Default testing utilities for Spring Boot, extremely important for ensuring
+          we adhere to SOLID principles and can write tests for new features.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 
+              Spring Boot Maven Plugin:
+              Packages the application as an executable jar file.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

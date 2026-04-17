@@ -1,0 +1,219 @@
+/* 
+  Topbar.css
+  
+  What is this file?
+  Styles for the header section of the FSF portal.
+*/
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-radius: 0 0 0 0; 
+  border-top: none;
+  border-right: none;
+  background: var(--accent-teal); /* Brand Blue */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  color: #fff; /* Ensure text is readable on blue */
+}
+
+.topbar .page-title {
+  color: #fff;
+}
+
+.topbar .date-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.page-title {
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.search-container {
+  flex: 0 1 400px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 var(--spacing-lg);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: var(--accent-teal);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.notif-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  color: var(--text-primary);
+}
+
+.notif-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-teal);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-teal);
+}
+
+.date-badge {
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--glass-bg);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+/* Global Search Dropdown Styles */
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  z-index: 1000;
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.search-result-item {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-result-item:hover {
+  background: var(--glass-bg);
+}
+
+.result-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.result-category {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-teal);
+  background: rgba(0, 210, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.search-no-results {
+  padding: 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Theme Toggle Switch */
+.theme-switch {
+  width: 64px;
+  height: 32px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  transition: all 0.3s ease;
+}
+
+.theme-switch:hover {
+  border-color: var(--accent-teal);
+}
+
+.switch-track {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 14px;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.switch-thumb {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+/* Logic for sliding position */
+.theme-switch.dark .switch-thumb {
+  transform: translateX(26px);
+}
+
+.theme-switch.light .switch-thumb {
+  transform: translateX(0);
+}
+
+.theme-switch.light {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-switch.light .switch-thumb {
+  background: var(--accent-teal);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
