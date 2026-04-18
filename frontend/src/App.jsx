@@ -8,6 +8,7 @@ import Carpool from './pages/Carpool';
 import AdminPanel from './pages/AdminPanel';
 import Stats from './pages/Stats';
 import ServiceSkeleton from './components/ServiceSkeleton';
+import PastPapers from './pages/PastPapers';
 import './App.css';
 
 /**
@@ -59,7 +60,7 @@ function App() {
                       
                       {/* Placeholders for the other 8 features */}
                       <Route path="/lost-found" element={<ServiceSkeleton featureName="Lost & Found" />} />
-                      <Route path="/past-papers" element={<ServiceSkeleton featureName="Past Papers" />} />
+                      <Route path="/past-papers" element={<PastPapers user={user} />} />
                       <Route path="/events" element={<ServiceSkeleton featureName="Campus Events" />} />
                       <Route path="/reminders" element={<ServiceSkeleton featureName="Pop Reminders" />} />
                       <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
