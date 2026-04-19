@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/rides/**").permitAll() // Students can view/post rides
                 .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/lost-found/**").permitAll()
+                .requestMatchers("/api/notes/**").permitAll()
                 .anyRequest().authenticated()
             );
 

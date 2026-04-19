@@ -3,8 +3,6 @@ package com.fast.fsf.controller;
 import com.fast.fsf.model.ActivityLog;
 import com.fast.fsf.repository.ActivityLogRepository;
 import com.fast.fsf.repository.RideRepository;
-import com.fast.fsf.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,15 +19,11 @@ public class AdminController {
 
     private final ActivityLogRepository activityLogRepository;
     private final RideRepository rideRepository;
-    private final UserRepository userRepository;
 
-    @Autowired
     public AdminController(ActivityLogRepository activityLogRepository, 
-                           RideRepository rideRepository,
-                           UserRepository userRepository) {
+                           RideRepository rideRepository) {
         this.activityLogRepository = activityLogRepository;
         this.rideRepository = rideRepository;
-        this.userRepository = userRepository;
     }
 
     /**

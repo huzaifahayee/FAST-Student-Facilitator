@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Carpool from './pages/Carpool';
 import AdminPanel from './pages/AdminPanel';
 import Stats from './pages/Stats';
+import LostAndFound from './pages/LostAndFound';
+import FastNotes from './pages/FastNotes';
 import ServiceSkeleton from './components/ServiceSkeleton';
 import './App.css';
 
@@ -58,14 +60,14 @@ function App() {
                       <Route path="/stats" element={<AdminRoute><Stats /></AdminRoute>} />
                       
                       {/* Placeholders for the other 8 features */}
-                      <Route path="/lost-found" element={<ServiceSkeleton featureName="Lost & Found" />} />
+                      <Route path="/lost-found" element={<LostAndFound user={user} />} />
                       <Route path="/past-papers" element={<ServiceSkeleton featureName="Past Papers" />} />
                       <Route path="/events" element={<ServiceSkeleton featureName="Campus Events" />} />
                       <Route path="/reminders" element={<ServiceSkeleton featureName="Pop Reminders" />} />
                       <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
                       <Route path="/timetable" element={<ServiceSkeleton featureName="Timetable" />} />
                       <Route path="/marketplace" element={<ServiceSkeleton featureName="Book Exchange" />} />
-                      <Route path="/notes" element={<ServiceSkeleton featureName="FastNotes" />} />
+                      <Route path="/notes" element={<FastNotes user={user} />} />
                     </Routes>
                   </div>
                 </main>

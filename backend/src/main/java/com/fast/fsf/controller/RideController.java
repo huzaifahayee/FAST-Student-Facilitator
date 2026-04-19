@@ -4,7 +4,6 @@ import com.fast.fsf.model.ActivityLog;
 import com.fast.fsf.model.Ride;
 import com.fast.fsf.repository.ActivityLogRepository;
 import com.fast.fsf.repository.RideRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,6 @@ public class RideController {
     private final RideRepository rideRepository;
     private final ActivityLogRepository activityLogRepository;
 
-    @Autowired
     public RideController(RideRepository rideRepository, ActivityLogRepository activityLogRepository) {
         this.rideRepository = rideRepository;
         this.activityLogRepository = activityLogRepository;
