@@ -10,6 +10,7 @@ import Stats from './pages/Stats';
 import LostAndFound from './pages/LostAndFound';
 import FastNotes from './pages/FastNotes';
 import ServiceSkeleton from './components/ServiceSkeleton';
+import PastPapers from './pages/PastPapers';
 import './App.css';
 
 /**
@@ -61,7 +62,7 @@ function App() {
                       
                       {/* Placeholders for the other 8 features */}
                       <Route path="/lost-found" element={<LostAndFound user={user} />} />
-                      <Route path="/past-papers" element={<ServiceSkeleton featureName="Past Papers" />} />
+                      <Route path="/past-papers" element={<PastPapers user={user} />} />
                       <Route path="/events" element={<ServiceSkeleton featureName="Campus Events" />} />
                       <Route path="/reminders" element={<ServiceSkeleton featureName="Pop Reminders" />} />
                       <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />

@@ -45,10 +45,16 @@ const AdminPanel = () => {
 
   const fetchFlagged = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/rides/flagged');
-      if (!res.ok) throw new Error("CORS or Server Error (Flagged)");
-      const data = await res.json();
-      setFlaggedItems(data);
+      const [resRides, resPapers] = await Promise.all([
+        fetch('http://localhost:8080/api/rides/flagged'),
+        fetch('http://localhost:8080/api/past-papers/flagged')
+      ]);
+      if (!resRides.ok || !resPapers.ok) throw new Error("CORS or Server Error (Flagged)");
+      const dataRides = await resRides.json();
+      const dataPapers = await resPapers.json();
+      const mappedRides = dataRides.map(r => ({ ...r, entityType: 'Ride' }));
+      const mappedPapers = dataPapers.map(p => ({ ...p, entityType: 'Paper' }));
+      setFlaggedItems([...mappedRides, ...mappedPapers]);
     } catch (err) {
       console.error(err);
       setError("Moderation connectivity lost. Check backend.");
@@ -59,10 +65,16 @@ const AdminPanel = () => {
 
   const fetchPending = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/rides/pending');
-      if (!res.ok) throw new Error("Server error (Pending)");
-      const data = await res.json();
-      setPendingItems(data);
+      const [resRides, resPapers] = await Promise.all([
+        fetch('http://localhost:8080/api/rides/pending'),
+        fetch('http://localhost:8080/api/past-papers/pending')
+      ]);
+      if (!resRides.ok || !resPapers.ok) throw new Error("Server error (Pending)");
+      const dataRides = await resRides.json();
+      const dataPapers = await resPapers.json();
+      const mappedRides = dataRides.map(r => ({ ...r, entityType: 'Ride' }));
+      const mappedPapers = dataPapers.map(p => ({ ...p, entityType: 'Paper' }));
+      setPendingItems([...mappedRides, ...mappedPapers]);
     } catch (err) {
       setError("Failed to sync with approval queue.");
     }
@@ -90,20 +102,22 @@ const AdminPanel = () => {
     }
   };
 
-  const handleApprove = async (id) => {
-    const reason = prompt("Optional: Add a message for the student (e.g., 'Verified FASTian')");
+  const handleApprove = async (id, entityType) => {
+    const reason = prompt(`Optional: Add a message for the student (e.g., 'Verified')`);
+    const endpoint = entityType === 'Ride' ? 'rides' : 'past-papers';
     try {
-      await fetch(`http://localhost:8080/api/rides/${id}/approve?reason=${encodeURIComponent(reason || '')}`, { method: 'PUT' });
+      await fetch(`http://localhost:8080/api/${endpoint}/${id}/approve?reason=${encodeURIComponent(reason || '')}`, { method: 'PUT' });
       refreshData();
     } catch (err) {
       console.error("Approve failed", err);
     }
   };
 
-  const handleResolve = async (id) => {
-    if (!window.confirm("Clear the flag on this ride and keep it live?")) return;
+  const handleResolve = async (id, entityType) => {
+    if (!window.confirm("Clear the flag on this item and keep it live?")) return;
+    const endpoint = entityType === 'Ride' ? 'rides' : 'past-papers';
     try {
-      const res = await fetch(`http://localhost:8080/api/rides/${id}/resolve`, { method: 'PUT' });
+      const res = await fetch(`http://localhost:8080/api/${endpoint}/${id}/resolve`, { method: 'PUT' });
       if (!res.ok) throw new Error(`Resolve failed with status ${res.status}`);
       refreshData();
     } catch (err) {
@@ -112,13 +126,14 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, entityType) => {
     const reason = prompt("REQUIRED: Why is this content being removed?");
     if (!reason) return; // Force a reason for deletion
+    const endpoint = entityType === 'Ride' ? 'rides' : 'past-papers';
 
-    if (window.confirm("CRITICAL: This will permanently delete this ride. Proceed?")) {
+    if (window.confirm("CRITICAL: This will permanently delete this item. Proceed?")) {
       try {
-        await fetch(`http://localhost:8080/api/rides/${id}?reason=${encodeURIComponent(reason)}`, { method: 'DELETE' });
+        await fetch(`http://localhost:8080/api/${endpoint}/${id}?reason=${encodeURIComponent(reason)}`, { method: 'DELETE' });
         refreshData();
       } catch (err) {
         console.error("Delete failed", err);
@@ -222,9 +237,13 @@ const AdminPanel = () => {
                 </thead>
                 <tbody>
                   {(activeTab === 'approvals' ? pendingItems : flaggedItems).map(item => (
-                    <tr key={item.id}>
-                      <td>Ride #{item.id}</td>
-                      <td>{item.origin} → {item.destination}</td>
+                    <tr key={`${item.entityType}-${item.id}`}>
+                      <td>{item.entityType} #{item.id}</td>
+                      <td>
+                        {item.entityType === 'Ride' 
+                          ? `${item.origin} → ${item.destination}` 
+                          : `${item.courseName} (${item.courseCode})`}
+                      </td>
                       <td>
                         {item.moderationReason ? (
                           <span className="reason-tag">{item.moderationReason}</span>
@@ -235,11 +254,11 @@ const AdminPanel = () => {
                       <td>
                         <div className="action-btns">
                           {activeTab === 'approvals' ? (
-                            <button className="approve-btn" onClick={() => handleApprove(item.id)}>Approve</button>
+                            <button className="approve-btn" onClick={() => handleApprove(item.id, item.entityType)}>Approve</button>
                           ) : (
-                            <button className="approve-btn" onClick={() => handleResolve(item.id)}>Resolve</button>
+                            <button className="approve-btn" onClick={() => handleResolve(item.id, item.entityType)}>Resolve</button>
                           )}
-                          <button className="reject-btn" onClick={() => handleDelete(item.id)}>Delete</button>
+                          <button className="reject-btn" onClick={() => handleDelete(item.id, item.entityType)}>Delete</button>
                         </div>
                       </td>
                     </tr>
