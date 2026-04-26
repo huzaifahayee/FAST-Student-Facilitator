@@ -1,0 +1,328 @@
+.events-page {
+    padding: 2rem;
+    color: white;
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.upload-label {
+    background: rgba(255, 255, 255, 0.05);
+    color: #FFC107;
+    padding: 0.7rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px dashed rgba(255, 193, 7, 0.5);
+    font-size: 0.9rem;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.upload-label:hover {
+    background: rgba(255, 193, 7, 0.1);
+    border-style: solid;
+}
+
+.title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.title-section h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.search-bar-container {
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.8rem 1.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color, #FFC107);
+    outline: none;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.1);
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.3rem;
+    border-radius: 12px;
+}
+
+.toggle-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+    background: var(--primary-color, #FFC107);
+    color: #121212;
+    font-weight: bold;
+}
+
+.add-btn {
+    padding: 0.7rem 1.5rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.event-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.event-card {
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+}
+
+.category-tag {
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.category-tag.academic { background: #2196F3; }
+.category-tag.social { background: #E91E63; }
+.category-tag.sports { background: #FF9800; }
+.category-tag.holiday { background: #9C27B0; }
+
+.event-date { color: #888; }
+
+.event-card h3 { margin: 0.5rem 0; color: var(--primary-color, #FFC107); }
+
+.description {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.4;
+    flex-grow: 1;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #888;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 1rem;
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    width: 450px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: #f8f9fa; /* solid light background for the modal */
+    color: #333; /* Dark text for the modal */
+}
+
+.modal h2 {
+    color: #222;
+    margin-bottom: 0.5rem;
+}
+
+.modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal input, .modal textarea, .modal select {
+    padding: 0.8rem;
+    background: #ffffff;
+    border: 1.5px solid #ddd;
+    color: #222; /* Dark text inside inputs */
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.modal input::placeholder, .modal textarea::placeholder {
+    color: #888; /* Clearly visible placeholders */
+}
+
+.modal input:focus, .modal textarea:focus {
+    border-color: var(--primary-color, #FFC107);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.checkbox-label input {
+    width: 18px;
+    height: 18px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.form-actions button {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.submit-btn { 
+    background: var(--primary-color, #FFC107); 
+    color: #121212; 
+    font-weight: bold; 
+    cursor: pointer;
+    position: relative;
+    z-index: 1010; /* Ensure it's above other elements */
+}
+
+.submit-btn:hover {
+    background: #FFB300;
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* Semester Plan Table Styles */
+.semester-plan-table-container {
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: 16px;
+    margin-top: 1rem;
+    background: rgba(0, 0, 0, 0.05); /* Slight tint to define the area */
+}
+
+.semester-plan-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    color: #333; /* Dark text for light theme */
+}
+
+.semester-plan-table th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    color: #f39c12; /* Brand orange for headers */
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.semester-plan-table td {
+    padding: 1.2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.7); /* Semi-transparent white row */
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+.semester-plan-table td:first-child {
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 12px 0 0 12px;
+}
+
+.semester-plan-table td:last-child {
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 0 12px 12px 0;
+}
+
+.semester-plan-table tr:hover td {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.bold-cell {
+    font-weight: 700;
+    color: #000;
+    font-size: 1rem;
+}
+
+.academic-row td {
+    border-left: 4px solid #2196F3; /* Blue highlight for academic items */
+}
+
+.empty-row {
+    text-align: center;
+    padding: 4rem !important;
+    color: #888;
+    font-style: italic;
+    background: transparent !important;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+}

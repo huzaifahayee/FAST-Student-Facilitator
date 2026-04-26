@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/notes/**").permitAll()
                 .requestMatchers("/api/timetable/**").permitAll()
                 .requestMatchers("/api/books/**").permitAll()
+                .requestMatchers("/api/events/**").permitAll()
+                .requestMatchers("/api/reminders/**").permitAll()
                 .anyRequest().authenticated()
             );
 

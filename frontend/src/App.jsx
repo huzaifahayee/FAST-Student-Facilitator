@@ -13,6 +13,8 @@ import ServiceSkeleton from './components/ServiceSkeleton';
 import PastPapers from './pages/PastPapers';
 import TimetableManager from './pages/TimetableManager';
 import BookExchange from './pages/BookExchange';
+import CampusEventBoard from './pages/CampusEventBoard';
+import PopReminders from './pages/PopReminders';
 import './App.css';
 
 /**
@@ -80,8 +82,8 @@ function App() {
                       {/* Placeholders for the other 8 features */}
                       <Route path="/lost-found" element={<LostAndFound user={user} />} />
                       <Route path="/past-papers" element={<PastPapers user={user} />} />
-                      <Route path="/events" element={<ServiceSkeleton featureName="Campus Events" />} />
-                      <Route path="/reminders" element={<ServiceSkeleton featureName="Pop Reminders" />} />
+                      <Route path="/events" element={<CampusEventBoard user={user} />} />
+                      <Route path="/reminders" element={<PopReminders user={user} />} />
                       <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
                       <Route path="/timetable" element={<TimetableManager user={user} />} />
                       <Route path="/marketplace" element={<BookExchange user={user} />} />
