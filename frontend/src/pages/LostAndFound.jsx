@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import IosPickerField from '../components/IosPickerField';
 import './LostAndFound.css';
+import '../styles/IosMenuPicker.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/lost-found';
 
@@ -10,6 +12,9 @@ function LostAndFound({ user }) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const categoryMenuRef = useRef(null);
+
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     itemName: '',
@@ -20,6 +25,11 @@ function LostAndFound({ user }) {
   });
 
   const categories = ['Electronics', 'Wallet/ID', 'Books', 'Keys', 'Clothing', 'Other'];
+
+  const modalCategoryOptions = useMemo(
+    () => [{ value: '', label: 'Select Category' }, ...categories.map((c) => ({ value: c, label: c }))],
+    []
+  );
 
   const fetchListings = async () => {
     try {
@@ -43,8 +53,30 @@ function LostAndFound({ user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, searchKeyword, categoryFilter]);
 
+  useEffect(() => {
+    if (!categoryMenuOpen) return;
+    const onDoc = (e) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target)) {
+        setCategoryMenuOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setCategoryMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [categoryMenuOpen]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.category) {
+      alert('Please select a category.');
+      return;
+    }
     try {
       const payload = {
         ...formData,
@@ -101,7 +133,12 @@ function LostAndFound({ user }) {
   const sortListings = (list) => [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
-    <div className="lost-found-container">
+    <div className="lost-found-page">
+      <header className="lf-portal-header">
+        <h2>Lost and Found portal</h2>
+        <p>Report or browse lost and found listings to help the FAST community recover belongings.</p>
+      </header>
+
       <div className="tab-control">
         <button 
           className={activeTab === 'Lost' ? 'active-tab' : ''} 
@@ -121,14 +158,60 @@ function LostAndFound({ user }) {
           onChange={(e) => setSearchKeyword(e.target.value)}
           className="search-input"
         />
-        <select 
-          value={categoryFilter} 
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Categories</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <div className="ios-category-dropdown" ref={categoryMenuRef}>
+          <button
+            type="button"
+            className={`ios-category-dropdown-trigger${categoryMenuOpen ? ' is-open' : ''}`}
+            aria-haspopup="listbox"
+            aria-expanded={categoryMenuOpen}
+            onClick={() => setCategoryMenuOpen((o) => !o)}
+          >
+            <span className="ios-category-trigger-label">
+              {categoryFilter === '' ? 'All Categories' : categoryFilter}
+            </span>
+            <span className="ios-category-trigger-chevron" aria-hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+          {categoryMenuOpen && (
+            <div className="ios-category-dropdown-sheet">
+              <div className="ios-category-dropdown-panel" role="listbox" aria-label="Filter by category">
+                <p className="ios-category-dropdown-title">Categories</p>
+                <div className="ios-category-dropdown-list">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={categoryFilter === ''}
+                    className={`ios-category-option${categoryFilter === '' ? ' is-selected' : ''}`}
+                    onClick={() => {
+                      setCategoryFilter('');
+                      setCategoryMenuOpen(false);
+                    }}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      role="option"
+                      aria-selected={categoryFilter === c}
+                      className={`ios-category-option${categoryFilter === c ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setCategoryFilter(c);
+                        setCategoryMenuOpen(false);
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         
         <button className="primary-btn" onClick={() => setShowModal(true)}>
           Report {activeTab} Item
@@ -204,10 +287,13 @@ function LostAndFound({ user }) {
               </div>
               <div className="form-group">
                 <label>Category</label>
-                <select required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                  <option value="">Select Category</option>
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <IosPickerField
+                  className="lf-modal-category-picker"
+                  value={formData.category}
+                  onChange={(v) => setFormData({ ...formData, category: v })}
+                  options={modalCategoryOptions}
+                  sheetTitle="Category"
+                />
               </div>
               <div className="form-group">
                 <label>Description</label>

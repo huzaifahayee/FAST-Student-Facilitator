@@ -9,8 +9,10 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-deep);
-  background-image: radial-gradient(circle at top right, rgba(0, 210, 255, 0.1), transparent),
-                    radial-gradient(circle at bottom left, rgba(0, 26, 51, 0.3), transparent);
+  background-image:
+    radial-gradient(circle at 85% 12%, rgba(255, 59, 83, 0.12), transparent 42%),
+    radial-gradient(circle at top right, rgba(0, 210, 255, 0.08), transparent),
+    radial-gradient(circle at bottom left, rgba(0, 26, 51, 0.28), transparent);
 }
 
 .login-card {
@@ -26,8 +28,8 @@
 .logo-badge {
   width: 64px;
   height: 64px;
-  background: var(--accent-teal);
-  color: var(--bg-deep);
+  background: var(--accent-fill);
+  color: #ffffff;
   border-radius: var(--radius-md);
   margin: 0 auto var(--spacing-md);
   display: flex;

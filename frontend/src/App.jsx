@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
+import IconRail from './components/IconRail';
 import Topbar from './components/Topbar';
 import Dashboard from './components/Dashboard';
 import Login from './pages/Login';
@@ -15,6 +15,8 @@ import TimetableManager from './pages/TimetableManager';
 import BookExchange from './pages/BookExchange';
 import CampusEventBoard from './pages/CampusEventBoard';
 import PopReminders from './pages/PopReminders';
+import ReminderLoginPopup from './components/ReminderLoginPopup';
+import ReminderNotifier from './components/ReminderNotifier';
 import './App.css';
 
 /**
@@ -30,7 +32,11 @@ function App() {
     } catch (e) {
       return null;
     }
-  }); 
+  });
+  // UC-24: tracks whether the user just logged in (vs. a page reload of
+  // an existing session). The reminder login pop-up only fires when this
+  // is true. It is reset by ReminderLoginPopup once shown / dismissed.
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('fsf-theme') || 'dark');
 
   React.useEffect(() => {
@@ -63,35 +69,42 @@ function App() {
       <div className="app-shell">
         <Routes>
           {/* Login Page: Outside of the main shell */}
-          <Route path="/login" element={<Login onLogin={(userData) => setUser(userData)} />} />
+          <Route path="/login" element={<Login onLogin={(userData) => { setUser(userData); setJustLoggedIn(true); }} />} />
 
           {/* Main Shell: Only accessible if authenticated */}
           <Route path="/*" element={
             <ProtectedRoute>
-              <div className="app-shell">
-                <Sidebar user={user} />
-                <main className="main-viewport">
-                  <Topbar theme={theme} toggleTheme={toggleTheme} user={user} />
-                  <div className="content-area">
-                    <Routes>
-                      <Route path="/" element={<Dashboard user={user} />} />
-                      <Route path="/carpool" element={<Carpool user={user} />} />
-                      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-                      <Route path="/stats" element={<AdminRoute><Stats /></AdminRoute>} />
-                      
-                      {/* Placeholders for the other 8 features */}
-                      <Route path="/lost-found" element={<LostAndFound user={user} />} />
-                      <Route path="/past-papers" element={<PastPapers user={user} />} />
-                      <Route path="/events" element={<CampusEventBoard user={user} />} />
-                      <Route path="/reminders" element={<PopReminders user={user} />} />
-                      <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
-                      <Route path="/timetable" element={<TimetableManager user={user} />} />
-                      <Route path="/marketplace" element={<BookExchange user={user} />} />
-                      <Route path="/notes" element={<FastNotes user={user} />} />
-                    </Routes>
-                  </div>
-                </main>
-              </div>
+              <>
+                {/* UC-24 login pop-up & UC-25 alt2 in-app notification scheduler */}
+                <ReminderLoginPopup
+                  user={user}
+                  justLoggedIn={justLoggedIn}
+                  onDismiss={() => setJustLoggedIn(false)}
+                />
+                <ReminderNotifier user={user} />
+                <div className="app-canvas">
+                  <IconRail user={user} onLogout={() => setUser(null)} />
+                  <main className="main-viewport">
+                    <Topbar theme={theme} toggleTheme={toggleTheme} user={user} />
+                    <div className="content-area">
+                      <Routes>
+                        <Route path="/" element={<Dashboard user={user} />} />
+                        <Route path="/carpool" element={<Carpool user={user} />} />
+                        <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                        <Route path="/stats" element={<AdminRoute><Stats /></AdminRoute>} />
+                        <Route path="/lost-found" element={<LostAndFound user={user} />} />
+                        <Route path="/past-papers" element={<PastPapers user={user} />} />
+                        <Route path="/events" element={<CampusEventBoard user={user} />} />
+                        <Route path="/reminders" element={<PopReminders user={user} />} />
+                        <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
+                        <Route path="/timetable" element={<TimetableManager user={user} />} />
+                        <Route path="/marketplace" element={<BookExchange user={user} />} />
+                        <Route path="/notes" element={<FastNotes user={user} />} />
+                      </Routes>
+                    </div>
+                  </main>
+                </div>
+              </>
             </ProtectedRoute>
           } />
         </Routes>

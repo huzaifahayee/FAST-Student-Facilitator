@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import IosPickerField from '../components/IosPickerField';
 import './BookExchange.css';
+
+const BOOK_CONDITION_OPTIONS = [
+  { value: 'New', label: 'New' },
+  { value: 'Like New', label: 'Like New' },
+  { value: 'Good', label: 'Good' },
+  { value: 'Fair', label: 'Fair' },
+];
 
 const BookExchange = ({ user }) => {
   const [activeTab, setActiveTab] = useState('SELL');
@@ -217,12 +225,14 @@ const BookExchange = ({ user }) => {
               <input type="text" placeholder="Course Code (e.g., CS201)" required 
                 value={newBook.courseCode} onChange={e => setNewBook({...newBook, courseCode: e.target.value})} />
               
-              <select value={newBook.bookCondition} onChange={e => setNewBook({...newBook, bookCondition: e.target.value})}>
-                <option value="New">New</option>
-                <option value="Like New">Like New</option>
-                <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-              </select>
+              <IosPickerField
+                className="be-condition-picker"
+                value={newBook.bookCondition}
+                onChange={(v) => setNewBook({ ...newBook, bookCondition: v })}
+                options={BOOK_CONDITION_OPTIONS}
+                sheetTitle="Condition"
+                minWidth={160}
+              />
 
               {activeTab !== 'EXCHANGE' && (
                 <input type="number" placeholder="Price (Rs.)" required min="0"
@@ -232,23 +242,45 @@ const BookExchange = ({ user }) => {
               {activeTab !== 'BUY' && (
                 <>
                   <div className="file-upload-group">
-                    <label>Front Cover (PNG)</label>
-                    <input type="file" accept="image/png" onChange={e => handleFileChange(e, 'frontCoverImage')} />
+                    <span className="file-upload-caption">Front Cover (PNG)</span>
+                    <label className="ios-file-field">
+                      <input
+                        className="ios-file-field-input"
+                        type="file"
+                        accept="image/png"
+                        onChange={(e) => handleFileChange(e, 'frontCoverImage')}
+                      />
+                      <span className="ios-file-field-btn">Choose Media</span>
+                      <span className="ios-file-field-name">
+                        {newBook.frontCoverImage ? 'Image attached' : 'No file chosen'}
+                      </span>
+                    </label>
                     {newBook.frontCoverImage && <span className="upload-success">✓ Loaded</span>}
                   </div>
                   
                   <div className="file-upload-group">
-                    <label>Back Cover (PNG)</label>
-                    <input type="file" accept="image/png" onChange={e => handleFileChange(e, 'backCoverImage')} />
+                    <span className="file-upload-caption">Back Cover (PNG)</span>
+                    <label className="ios-file-field">
+                      <input
+                        className="ios-file-field-input"
+                        type="file"
+                        accept="image/png"
+                        onChange={(e) => handleFileChange(e, 'backCoverImage')}
+                      />
+                      <span className="ios-file-field-btn">Choose Media</span>
+                      <span className="ios-file-field-name">
+                        {newBook.backCoverImage ? 'Image attached' : 'No file chosen'}
+                      </span>
+                    </label>
                     {newBook.backCoverImage && <span className="upload-success">✓ Loaded</span>}
                   </div>
                 </>
               )}
             </div>
 
-            <div className="form-btns">
-              <button type="submit" className="post-btn">{editBookId ? 'Save Changes' : 'Submit Listing'}</button>
+            <div className="be-form-btns">
               <button type="button" className="cancel-btn" onClick={() => { setIsPosting(false); setEditBookId(null); }}>Cancel</button>
+              <button type="submit" className="post-btn">{editBookId ? 'Save Changes' : 'Submit Listing'}</button>
             </div>
           </form>
         </div>

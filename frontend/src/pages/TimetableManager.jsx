@@ -1,7 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import IosPickerField from '../components/IosPickerField';
 import './TimetableManager.css';
+
+const TIMETABLE_DEPT_OPTIONS = [
+  { value: 'CS', label: 'BS CS' },
+  { value: 'SE', label: 'BS SE' },
+  { value: 'DS', label: 'BS DS' },
+  { value: 'AI', label: 'BS AI' },
+  { value: 'CYS', label: 'BS CYS' },
+];
+
+const TIMETABLE_BATCH_OPTIONS = [
+  { value: '23', label: '2023' },
+  { value: '24', label: '2024' },
+  { value: '25', label: '2025' },
+  { value: '26', label: '2026' },
+];
+
+const TIMETABLE_DAY_OPTIONS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((d) => ({
+  value: d,
+  label: d,
+}));
+
+const TIMETABLE_SECTION_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((s) => ({
+  value: s,
+  label: s,
+}));
 
 const TimetableManager = ({ user }) => {
   const [department, setDepartment] = useState('CS');
@@ -129,7 +155,7 @@ const TimetableManager = ({ user }) => {
   };
 
   return (
-    <div className="timetable-page custom-theme">
+    <div className="timetable-page">
       <header className="timetable-header">
         <h2>Timetable Manager</h2>
         <p>View and export your official weekly class schedule.</p>
@@ -140,33 +166,39 @@ const TimetableManager = ({ user }) => {
           <h3>Admin Controls: Upload Timetable</h3>
           {uploadError && <p className="error-text">{uploadError}</p>}
           <form onSubmit={handleUpload} className="upload-form">
-            <div className="upload-inputs" style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+            <div className="upload-inputs">
               <div className="input-row">
-                <label style={{color: '#fff', fontSize: '0.9rem'}}>Option 1: Paste CSV URL</label>
+                <label className="upload-field-label">Option 1: Paste CSV URL</label>
                 <input 
                   type="url" 
                   placeholder="Google Sheet CSV Link" 
                   value={uploadUrl} 
                   onChange={e => { setUploadUrl(e.target.value); if(e.target.value) setSelectedFile(null); }} 
                   className="url-input"
-                  style={{marginTop: '0.5rem'}}
                 />
               </div>
               
-              <div className="divider" style={{color: '#666', textAlign: 'center', fontSize: '0.8rem'}}>— OR —</div>
+              <div className="upload-divider">— OR —</div>
 
               <div className="input-row">
-                <label style={{color: '#fff', fontSize: '0.9rem'}}>Option 2: Upload local CSV or Excel (.xlsx/.xls)</label>
-                <input 
-                  type="file" 
-                  accept=".csv, .xlsx, .xls"
-                  onChange={e => { setSelectedFile(e.target.files[0]); if(e.target.files[0]) setUploadUrl(''); }}
-                  style={{marginTop: '0.5rem', color: '#fff'}}
-                  className="file-input"
-                />
+                <span className="upload-field-label">Option 2: Upload local CSV or Excel (.xlsx/.xls)</span>
+                <label className="ios-file-field tt-admin-file">
+                  <input
+                    className="ios-file-field-input"
+                    type="file"
+                    accept=".csv,.xlsx,.xls,application/vnd.ms-excel,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      setSelectedFile(f ?? null);
+                      if (f) setUploadUrl('');
+                    }}
+                  />
+                  <span className="ios-file-field-btn">Choose Media</span>
+                  <span className="ios-file-field-name">{selectedFile?.name || 'No file chosen'}</span>
+                </label>
               </div>
             </div>
-            <button type="submit" className="primary-btn" disabled={uploading} style={{marginTop: '1.5rem'}}>
+            <button type="submit" className="primary-btn" disabled={uploading}>
               {uploading ? "Uploading..." : "Upload / Update Global Timetable"}
             </button>
           </form>
@@ -178,49 +210,54 @@ const TimetableManager = ({ user }) => {
         <div className="custom-selectors">
           <div className="select-group">
             <label>Department</label>
-            <select value={department} onChange={(e) => setDepartment(e.target.value)}>
-              <option value="CS">BS CS</option>
-              <option value="SE">BS SE</option>
-              <option value="DS">BS DS</option>
-              <option value="AI">BS AI</option>
-              <option value="CYS">BS CYS</option>
-            </select>
+            <IosPickerField
+              className="tt-picker"
+              value={department}
+              onChange={setDepartment}
+              options={TIMETABLE_DEPT_OPTIONS}
+              sheetTitle="Department"
+            />
           </div>
           <div className="select-group">
             <label>Batch Year</label>
-            <select value={batch} onChange={(e) => setBatch(e.target.value)}>
-              <option value="23">2023</option>
-              <option value="24">2024</option>
-              <option value="25">2025</option>
-              <option value="26">2026</option>
-            </select>
+            <IosPickerField
+              className="tt-picker"
+              value={batch}
+              onChange={setBatch}
+              options={TIMETABLE_BATCH_OPTIONS}
+              sheetTitle="Batch year"
+            />
           </div>
           <div className="select-group">
             <label>Day</label>
-            <select value={day} onChange={(e) => setDay(e.target.value)}>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-            </select>
+            <IosPickerField
+              className="tt-picker"
+              value={day}
+              onChange={setDay}
+              options={TIMETABLE_DAY_OPTIONS}
+              sheetTitle="Day"
+            />
           </div>
           <div className="select-group">
             <label>Section</label>
-            <select value={section} onChange={(e) => setSection(e.target.value)}>
-              {['A','B','C','D','E','F','G'].map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <IosPickerField
+              className="tt-picker"
+              value={section}
+              onChange={setSection}
+              options={TIMETABLE_SECTION_OPTIONS}
+              sheetTitle="Section"
+            />
           </div>
         </div>
 
-        <button className="get-timetable-btn" onClick={loadTimetable} disabled={loading}>
+        <button type="button" className="get-timetable-btn" onClick={loadTimetable} disabled={loading}>
           {loading ? "Loading..." : "Get Timetable"}
         </button>
         
         {timetable.length > 0 && (
-          <div className="export-actions" style={{marginBottom: '1rem'}}>
-            <button className="secondary-btn" onClick={exportAsImage}>📸 Export Weekly Image</button>
-            <button className="secondary-btn" onClick={exportAsPDF}>📄 Export Weekly PDF</button>
+          <div className="export-actions">
+            <button type="button" className="secondary-btn" onClick={exportAsImage}>📸 Export Weekly Image</button>
+            <button type="button" className="secondary-btn" onClick={exportAsPDF}>📄 Export Weekly PDF</button>
           </div>
         )}
 
@@ -256,23 +293,23 @@ const TimetableManager = ({ user }) => {
             </table>
           ) : (
             !loading && <div className="empty-state">
-              <p style={{color: '#fff'}}>No timetable found for the selected section.</p>
+              <p>No timetable found for the selected section.</p>
             </div>
           )}
         </div>
 
         {/* HIDDEN WEEKLY GRID FOR EXPORT */}
-        <div id="timetable-weekly-export" style={{ display: 'none', padding: '40px', backgroundColor: '#121212', width: '1200px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <h1 style={{ color: '#FFC107', margin: '0' }}>{department} - Batch {batch} - Section {section}</h1>
-            <p style={{ color: '#fff', fontSize: '18px' }}>Weekly Class Schedule</p>
+        <div id="timetable-weekly-export" style={{ display: 'none' }}>
+          <div className="export-title">
+            <h1>{department} - Batch {batch} - Section {section}</h1>
+            <p>Weekly Class Schedule</p>
           </div>
-          <table className="weekly-export-table" style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #FFC107' }}>
+          <table className="weekly-export-table">
             <thead>
-              <tr style={{ backgroundColor: '#1a1a1a' }}>
-                <th style={{ border: '1px solid #FFC107', padding: '15px', color: '#FFC107' }}>Time / Day</th>
+              <tr>
+                <th>Time / Day</th>
                 {days.map(d => (
-                  <th key={d} style={{ border: '1px solid #FFC107', padding: '15px', color: '#FFC107' }}>{d}</th>
+                  <th key={d}>{d}</th>
                 ))}
               </tr>
             </thead>
@@ -281,16 +318,16 @@ const TimetableManager = ({ user }) => {
                 .filter(slot => days.some(day => getEntryForSlot(day, slot)))
                 .map(slot => (
                 <tr key={slot}>
-                  <td style={{ border: '1px solid #FFC107', padding: '15px', color: '#FFC107', fontWeight: 'bold', backgroundColor: '#1a1a1a' }}>{slot}</td>
+                  <td className="slot-label">{slot}</td>
                   {days.map(d => {
                     const entry = getEntryForSlot(d, slot);
                     return (
-                      <td key={d} style={{ border: '1px solid #FFC107', padding: '10px', color: '#fff', backgroundColor: entry ? '#2a2a2a' : 'transparent', textAlign: 'center', fontSize: '14px' }}>
+                      <td key={d} className={entry ? 'cell-filled' : ''}>
                         {entry ? (
                           <>
-                            <div style={{ fontWeight: 'bold', color: '#FFC107', marginBottom: '5px' }}>{entry.courseName}</div>
-                            <div style={{ fontSize: '12px', opacity: 0.8 }}>{entry.roomNumber}</div>
-                            <div style={{ fontSize: '11px', fontStyle: 'italic', marginTop: '3px' }}>{entry.instructorName}</div>
+                            <div className="cell-course">{entry.courseName}</div>
+                            <div className="cell-room">{entry.roomNumber}</div>
+                            <div className="cell-instructor">{entry.instructorName}</div>
                           </>
                         ) : '-'}
                       </td>
@@ -300,7 +337,7 @@ const TimetableManager = ({ user }) => {
               ))}
             </tbody>
           </table>
-          <div style={{ marginTop: '20px', textAlign: 'right', color: '#888', fontSize: '12px' }}>
+          <div className="export-footer">
             Generated by FAST Student Facilitator (FSF)
           </div>
         </div>

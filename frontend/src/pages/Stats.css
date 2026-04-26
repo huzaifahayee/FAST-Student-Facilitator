@@ -17,6 +17,12 @@
   padding: 24px;
   position: relative;
   overflow: hidden;
+  border-radius: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-page .stat-card.glass-card:hover {
+  transform: translateY(-3px);
 }
 
 .stat-icon {
@@ -81,7 +87,7 @@
 }
 
 .bar.highlight {
-  background: var(--accent-teal);
+  background: var(--accent-fill);
   box-shadow: 0 0 20px var(--accent-glow);
 }
 
@@ -114,20 +120,33 @@
 }
 
 .refresh-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 0.55rem 1.15rem;
+  border-radius: 999px;
   border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  background: rgba(0, 0, 0, 0.15);
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: background 120ms ease, transform 120ms ease;
+  font-family: var(--font-main);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+[data-theme='light'] .refresh-btn {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(2, 132, 199, 0.18);
 }
 
 .refresh-btn:hover {
-  background: var(--accent-teal);
-  color: #fff;
-  transform: translateY(-1px);
+  background: var(--accent-fill);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(12, 45, 72, 0.22);
+}
+
+[data-theme='dark'] .refresh-btn:hover {
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 59, 83, 0.32);
 }
 
 .last-updated {

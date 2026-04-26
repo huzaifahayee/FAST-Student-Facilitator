@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import IosPickerField from '../components/IosPickerField';
 import './FastNotes.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/notes';
@@ -49,6 +50,15 @@ function FastNotes({ user }) {
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKeyword, subjectFilter, courseCodeFilter]);
+
+  const subjectOptions = useMemo(
+    () => [{ value: '', label: 'All Subjects' }, ...subjects.map((s) => ({ value: s, label: s }))],
+    [subjects]
+  );
+  const courseCodeOptions = useMemo(
+    () => [{ value: '', label: 'All Course Codes' }, ...courseCodes.map((c) => ({ value: c, label: c }))],
+    [courseCodes]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,7 +132,7 @@ function FastNotes({ user }) {
         <p>Student-driven PDF note-sharing platform</p>
       </div>
 
-      <div className="controls glass-card">
+      <div className="fn-controls controls glass-card">
         <input 
           type="text" 
           placeholder="Search course code or subject..." 
@@ -130,24 +140,24 @@ function FastNotes({ user }) {
           onChange={(e) => setSearchKeyword(e.target.value)}
           className="search-input"
         />
-        <select 
-          value={subjectFilter} 
-          onChange={(e) => { setSubjectFilter(e.target.value); setCourseCodeFilter(''); }}
-          className="filter-select"
-        >
-          <option value="">All Subjects</option>
-          {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select 
-          value={courseCodeFilter} 
-          onChange={(e) => { setCourseCodeFilter(e.target.value); setSubjectFilter(''); }}
-          className="filter-select"
-        >
-          <option value="">All Course Codes</option>
-          {courseCodes.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <IosPickerField
+          className="fn-picker"
+          value={subjectFilter}
+          onChange={(v) => { setSubjectFilter(v); setCourseCodeFilter(''); }}
+          options={subjectOptions}
+          sheetTitle="Subject"
+          minWidth={200}
+        />
+        <IosPickerField
+          className="fn-picker"
+          value={courseCodeFilter}
+          onChange={(v) => { setCourseCodeFilter(v); setSubjectFilter(''); }}
+          options={courseCodeOptions}
+          sheetTitle="Course code"
+          minWidth={200}
+        />
         
-        <button className="primary-btn" onClick={() => setShowModal(true)}>
+        <button type="button" className="primary-btn fn-toolbar-primary" onClick={() => setShowModal(true)}>
           Upload Note
         </button>
       </div>
@@ -208,10 +218,10 @@ function FastNotes({ user }) {
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card">
-            <h2>Upload Note</h2>
-            <form onSubmit={handleSubmit}>
+        <div className="fn-modal-overlay" role="presentation" onClick={() => setShowModal(false)}>
+          <div className="fn-modal-content glass-card" role="dialog" aria-labelledby="fn-upload-title" onClick={(e) => e.stopPropagation()}>
+            <h2 id="fn-upload-title">Upload Note</h2>
+            <form className="fsf-form" onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Note Title</label>
                 <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
@@ -225,11 +235,21 @@ function FastNotes({ user }) {
                 <input required type="text" value={formData.courseCode} onChange={e => setFormData({...formData, courseCode: e.target.value})} />
               </div>
               <div className="form-group">
-                <label>Upload Note (PDF only)</label>
-                <input required type="file" accept=".pdf" onChange={e => setFormData({...formData, file: e.target.files[0]})} />
+                <span className="fn-field-label">Upload note (PDF or DOCX)</span>
+                <label className="ios-file-field">
+                  <input
+                    required
+                    className="ios-file-field-input"
+                    type="file"
+                    accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => setFormData({ ...formData, file: e.target.files?.[0] ?? null })}
+                  />
+                  <span className="ios-file-field-btn">Choose Media</span>
+                  <span className="ios-file-field-name">{formData.file?.name || 'No file chosen'}</span>
+                </label>
               </div>
               
-              <div className="modal-actions">
+              <div className="fn-modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="submit-btn">Submit</button>
               </div>

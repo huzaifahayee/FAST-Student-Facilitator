@@ -1,0 +1,246 @@
+/*
+  Shared iOS-style sheet picker (frosted panel + pill rows + checkmark).
+  Used by Lost & Found (categories) and Past Papers (exams).
+*/
+
+.ios-category-dropdown {
+  position: relative;
+  min-width: 220px;
+  flex: 0 0 auto;
+}
+
+/*
+ * z-index on this node alone cannot paint above *later siblings* of an ancestor
+ * that uses z-index:0 (e.g. every .form-group / .form-label). Those ancestors
+ * form a stacking context at level 0, so the next form row wins in paint order.
+ * Lift the row that directly contains the dropdown while it is open.
+ */
+:has(> .ios-category-dropdown .ios-category-dropdown-trigger.is-open) {
+  position: relative;
+  z-index: 220;
+}
+
+/* Reinforce stacking inside the lifted row (footer / following fields stay below). */
+.ios-category-dropdown:has(.ios-category-dropdown-trigger.is-open) {
+  z-index: 1;
+}
+
+.ios-category-trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ios-category-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--fsf-pill-pad-y, 12px) var(--fsf-pill-pad-x, 28px);
+  border-radius: var(--fsf-pill-radius, 999px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  font-family: var(--font-main, system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--text-primary);
+}
+
+[data-theme='light'] .ios-category-dropdown-trigger {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(2, 132, 199, 0.18);
+  color: var(--accent-teal);
+  box-shadow:
+    0 2px 12px rgba(2, 132, 199, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+[data-theme='light'] .ios-category-dropdown-trigger.is-open {
+  border-color: rgba(20, 58, 92, 0.28);
+  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.12);
+}
+
+[data-theme='dark'] .ios-category-dropdown-trigger {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .ios-category-dropdown-trigger.is-open {
+  border-color: rgba(255, 59, 83, 0.35);
+}
+
+.ios-category-trigger-chevron {
+  display: flex;
+  color: var(--accent-teal);
+  opacity: 0.85;
+  transition: transform 0.22s ease;
+}
+
+[data-theme='dark'] .ios-category-trigger-chevron {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ios-category-dropdown-trigger.is-open .ios-category-trigger-chevron {
+  transform: rotate(180deg);
+}
+
+.ios-category-dropdown-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 2;
+  animation: ios-menu-picker-in 0.22s ease;
+}
+
+/* Portaled from IosPickerField.jsx — fixed to body; do not force left/right from inline sheet */
+.ios-category-dropdown-sheet--portaled {
+  right: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ios-category-dropdown-sheet--portaled .ios-category-dropdown-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ios-category-dropdown-sheet--portaled .ios-category-dropdown-list {
+  flex: 1;
+  min-height: 0;
+  max-height: min(52vh, 320px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+@keyframes ios-menu-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ios-category-dropdown-panel {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  border-radius: 26px;
+  padding: 14px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 24px 60px rgba(2, 132, 199, 0.18),
+    0 8px 24px rgba(15, 45, 90, 0.12);
+}
+
+[data-theme='light'] .ios-category-dropdown-panel {
+  background: rgba(245, 246, 250, 0.72);
+  backdrop-filter: saturate(200%) blur(40px);
+  -webkit-backdrop-filter: saturate(200%) blur(40px);
+}
+
+[data-theme='dark'] .ios-category-dropdown-panel {
+  background: rgba(22, 22, 28, 0.94);
+  backdrop-filter: saturate(180%) blur(36px);
+  -webkit-backdrop-filter: saturate(180%) blur(36px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 1px rgba(255, 59, 83, 0.15);
+}
+
+.ios-category-dropdown-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+}
+
+[data-theme='dark'] .ios-category-dropdown-title {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ios-category-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ios-category-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px 0 18px;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-main, system-ui, sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+[data-theme='light'] .ios-category-option {
+  background: rgba(255, 255, 255, 0.55);
+  color: #0f2744;
+}
+
+[data-theme='light'] .ios-category-option:hover {
+  background: rgba(255, 255, 255, 0.78);
+  transform: scale(1.01);
+}
+
+[data-theme='light'] .ios-category-option.is-selected {
+  background: rgba(60, 64, 72, 0.1);
+}
+
+[data-theme='dark'] .ios-category-option {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme='dark'] .ios-category-option:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .ios-category-option.is-selected {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.ios-category-option.is-selected::after {
+  content: '✓';
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+[data-theme='light'] .ios-category-option.is-selected::after {
+  color: #0a1628;
+}
+
+[data-theme='dark'] .ios-category-option.is-selected::after {
+  color: #ffffff;
+}

@@ -75,7 +75,7 @@ const Dashboard = ({ user }) => {
       {/* Welcome Banner */}
       <section className="welcome-banner glass-card">
         <div className="banner-content">
-          <h1>Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋</h1>
+          <h1>Welcome back, {user?.name || 'Student'}!</h1>
           <p>Spring 2026 | SE-4B | FAST-NUCES Lahore</p>
         </div>
         <div className="banner-status">

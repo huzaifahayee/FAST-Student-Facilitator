@@ -18,22 +18,31 @@
 
 .tab-navigation {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 1rem;
+  padding: 0.35rem;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--glass-border);
+  width: fit-content;
+}
+
+[data-theme='light'] .tab-navigation {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(2, 132, 199, 0.14);
 }
 
 .tab-btn {
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  padding: 0.55rem 1.15rem;
+  border-radius: 11px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .tab-btn:hover {
@@ -42,8 +51,14 @@
 }
 
 .tab-btn.active {
-  background: rgba(var(--accent-blue-rgb), 0.15);
-  color: var(--accent-blue);
+  background: var(--accent-fill);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(12, 45, 72, 0.18);
+}
+
+[data-theme='dark'] .tab-btn.active {
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(255, 59, 83, 0.28);
 }
 
 .marketplace-actions {
@@ -65,10 +80,16 @@
 .search-form input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
   background: rgba(0, 0, 0, 0.2);
   color: var(--text-primary);
+  font-family: var(--font-main);
+}
+
+[data-theme='light'] .search-form input {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(2, 132, 199, 0.16);
 }
 
 .post-form-container {
@@ -84,12 +105,81 @@
   margin-bottom: 1.5rem;
 }
 
-.form-grid input, .form-grid select {
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.form-grid input,
+.form-grid select {
+  padding: 0.75rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
   background: rgba(0, 0, 0, 0.2);
   color: var(--text-primary);
+  font-family: var(--font-main);
+}
+
+.post-form-container .form-grid .be-condition-picker {
+  width: 100%;
+  min-width: 0;
+}
+
+[data-theme='light'] .form-grid input,
+[data-theme='light'] .form-grid select {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(2, 132, 199, 0.16);
+}
+
+.file-upload-caption {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.be-form-btns {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.be-form-btns .post-btn,
+.be-form-btns .cancel-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.be-form-btns .post-btn {
+  border: 1px solid var(--fsf-pill-cta-border);
+  background: var(--fsf-pill-cta-bg);
+  color: var(--fsf-pill-cta-text);
+  box-shadow: var(--fsf-pill-cta-shadow);
+}
+
+.be-form-btns .post-btn:hover {
+  transform: scale(1.03);
+  filter: brightness(1.04);
+}
+
+.be-form-btns .cancel-btn {
+  border: 1px solid var(--fsf-pill-muted-border);
+  background: var(--fsf-pill-muted-bg);
+  color: var(--fsf-pill-muted-text);
+  box-shadow: var(--fsf-pill-muted-shadow);
+  font-weight: 700;
+}
+
+.be-form-btns .cancel-btn:hover {
+  transform: scale(1.03);
 }
 
 .listings-grid {
@@ -102,6 +192,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-radius: 20px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 

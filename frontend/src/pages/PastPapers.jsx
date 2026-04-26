@@ -1,5 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import IosPickerField from '../components/IosPickerField';
 import './PastPapers.css';
+import '../styles/IosMenuPicker.css';
+
+const EXAM_FILTER_OPTIONS = [
+  { value: 'ALL', label: 'All Exams' },
+  { value: 'MIDTERM', label: 'Midterms' },
+  { value: 'FINAL', label: 'Finals' },
+  { value: 'QUIZ', label: 'Quizzes' },
+];
+
+const EXAM_UPLOAD_OPTIONS = [
+  { value: 'MIDTERM', label: 'Midterm' },
+  { value: 'FINAL', label: 'Final' },
+  { value: 'QUIZ', label: 'Quiz / Assignment' },
+];
 
 const GOOGLE_DRIVE_LINKS = {
   "Database Systems": "https://drive.google.com/drive/folders/1b8syVaHAJ1jCM70t8LvxRqeaAoGeHyK9",
@@ -18,7 +33,9 @@ export default function PastPapers({ user }) {
   const [papers, setPapers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterExam, setFilterExam] = useState('ALL');
-  
+  const [examMenuOpen, setExamMenuOpen] = useState(false);
+  const examMenuRef = useRef(null);
+
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [formData, setFormData] = useState({
     courseName: '', courseCode: '', semesterYear: '', examType: 'MIDTERM',
@@ -36,6 +53,24 @@ export default function PastPapers({ user }) {
   useEffect(() => {
     fetchPapers();
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (!examMenuOpen) return;
+    const onDoc = (e) => {
+      if (examMenuRef.current && !examMenuRef.current.contains(e.target)) {
+        setExamMenuOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setExamMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [examMenuOpen]);
 
   const fetchPapers = () => {
     const url = searchQuery.trim() 
@@ -219,6 +254,9 @@ export default function PastPapers({ user }) {
     ? papers 
     : papers.filter(p => p.examType === filterExam);
 
+  const examTriggerLabel =
+    EXAM_FILTER_OPTIONS.find((o) => o.value === filterExam)?.label ?? 'All Exams';
+
   return (
     <div className="past-papers-container">
       <div className="header-actions">
@@ -251,11 +289,14 @@ export default function PastPapers({ user }) {
           </div>
 
           <div className="form-group">
-            <select name="examType" value={formData.examType} onChange={handleInputChange}>
-              <option value="MIDTERM">Midterm</option>
-              <option value="FINAL">Final</option>
-              <option value="QUIZ">Quiz/Assignment</option>
-            </select>
+            <span className="upload-field-label">Exam type</span>
+            <IosPickerField
+              className="pp-exam-picker"
+              value={formData.examType}
+              onChange={(v) => setFormData({ ...formData, examType: v })}
+              options={EXAM_UPLOAD_OPTIONS}
+              sheetTitle="Exam type"
+            />
           </div>
 
           <div className="form-group">
@@ -271,7 +312,9 @@ export default function PastPapers({ user }) {
             <small className="hint-text">For standard courses, the permanent link will be used automatically.</small>
           </div>
 
-          <button type="submit" className="btn-submit">Submit for Approval</button>
+          <div className="upload-form-actions">
+            <button type="submit" className="btn-submit">Submit for Approval</button>
+          </div>
         </form>
       )}
 
@@ -283,23 +326,80 @@ export default function PastPapers({ user }) {
           onChange={(e) => setSearchQuery(e.target.value)} 
           className="search-input"
         />
-        <select value={filterExam} onChange={(e) => setFilterExam(e.target.value)} className="exam-filter">
-          <option value="ALL">All Exams</option>
-          <option value="MIDTERM">Midterms</option>
-          <option value="FINAL">Finals</option>
-          <option value="QUIZ">Quizzes</option>
-        </select>
+        <div className="ios-category-dropdown" ref={examMenuRef}>
+          <button
+            type="button"
+            className={`ios-category-dropdown-trigger${examMenuOpen ? ' is-open' : ''}`}
+            aria-haspopup="listbox"
+            aria-expanded={examMenuOpen}
+            onClick={() => setExamMenuOpen((o) => !o)}
+          >
+            <span className="ios-category-trigger-label">{examTriggerLabel}</span>
+            <span className="ios-category-trigger-chevron" aria-hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+          {examMenuOpen && (
+            <div className="ios-category-dropdown-sheet">
+              <div className="ios-category-dropdown-panel" role="listbox" aria-label="Filter by exam type">
+                <p className="ios-category-dropdown-title">Exams</p>
+                <div className="ios-category-dropdown-list">
+                  {EXAM_FILTER_OPTIONS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="option"
+                      aria-selected={filterExam === value}
+                      className={`ios-category-option${filterExam === value ? ' is-selected' : ''}`}
+                      onClick={() => {
+                        setFilterExam(value);
+                        setExamMenuOpen(false);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="papers-grid">
         {filteredPapers.length === 0 ? (
           <p className="empty-msg">No approved papers found.</p>
         ) : (
-          filteredPapers.map(paper => (
-            <div key={paper.id} className="glass-card paper-item" onClick={() => loadDetails(paper)}>
+          filteredPapers.map((paper) => (
+            <div
+              key={paper.id}
+              role="button"
+              tabIndex={0}
+              className="glass-card paper-item"
+              onClick={() => loadDetails(paper)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  loadDetails(paper);
+                }
+              }}
+            >
               <div className="card-top">
                 <span className={`exam-badge ${paper.examType.toLowerCase()}`}>{paper.examType}</span>
-                {paper.flagged && <span className="flag-badge" title="Flagged for review">🚩</span>}
+                <div className="paper-card-top-actions">
+                  {paper.flagged && (
+                    <span className="flag-badge" title="Flagged for review">
+                      🚩
+                    </span>
+                  )}
+                  <span className="paper-card-chevron" aria-hidden>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </span>
+                </div>
               </div>
               <h3 className="course-title">{paper.courseName}</h3>
               <p className="course-code">{paper.courseCode} &bull; {paper.semesterYear}</p>
@@ -314,72 +414,119 @@ export default function PastPapers({ user }) {
       </div>
 
       {selectedPaper && (
-        <div className="modal-backdrop" onClick={() => { setSelectedPaper(null); setShowReportForm(false); }}>
-          <div className="modal paper-detail-modal" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setSelectedPaper(null)}>&times;</button>
-            
-            <h2>{selectedPaper.courseName} ({selectedPaper.courseCode})</h2>
-            <p className="metadata">
-              {selectedPaper.semesterYear} • {selectedPaper.examType} • Inst: {selectedPaper.instructorName}
-            </p>
+        <div
+          className="modal-backdrop paper-detail-backdrop"
+          onClick={() => { setSelectedPaper(null); setShowReportForm(false); }}
+          role="presentation"
+        >
+          <div
+            className="modal paper-detail-modal"
+            onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="paper-detail-title"
+          >
+            <header className="paper-detail-modal-header">
+              <span className="paper-detail-modal-grabber" aria-hidden />
+              <button
+                type="button"
+                className="paper-detail-modal-done"
+                onClick={() => { setSelectedPaper(null); setShowReportForm(false); }}
+              >
+                Done
+              </button>
+            </header>
 
-            <button className="btn-primary open-drive" onClick={() => openDriveFolder(selectedPaper.id)}>
-              Open Google Drive Folder
-            </button>
+            <div className="paper-detail-modal-body">
+              <h2 id="paper-detail-title">{selectedPaper.courseName} ({selectedPaper.courseCode})</h2>
+              <p className="metadata">
+                {selectedPaper.semesterYear} • {selectedPaper.examType} • Inst: {selectedPaper.instructorName}
+              </p>
 
-            <div className="rating-section">
-              <h4>Rate this paper</h4>
-              <div className="stars">
-                {[1,2,3,4,5].map(v => (
-                   <span key={v} className="star-btn" onClick={() => ratePaper(v)}>⭐</span>
-                ))}
+              <button type="button" className="btn-primary open-drive" onClick={() => openDriveFolder(selectedPaper.id)}>
+                Open Google Drive Folder
+              </button>
+
+              <div className="rating-section">
+                <h4>Rate this paper</h4>
+                <div className="stars" role="group" aria-label="Star rating">
+                  {[1, 2, 3, 4, 5].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className="star-btn"
+                      onClick={() => ratePaper(v)}
+                      aria-label={`Rate ${v} stars`}
+                    >
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+                <p className="avg-rating">
+                  Current Average: {selectedPaper.averageRating} from {selectedPaper.ratingCount} reviews
+                </p>
               </div>
-              <p className="avg-rating">Current Average: {selectedPaper.averageRating} from {selectedPaper.ratingCount} reviews</p>
-            </div>
 
-            <div className="comments-section">
-              <h4>Comments & Tips</h4>
-              <div className="comments-list">
-                {comments.map(c => (
-                  <div key={c.id} className="comment">
-                    <div className="comm-head">
-                      <strong>{c.studentEmail.split('@')[0]}</strong> 
-                      <span className="date">{new Date(c.postedAt).toLocaleDateString()}</span>
+              <div className="comments-section">
+                <h4>Comments & Tips</h4>
+                <div className="comments-list">
+                  {comments.map((c) => (
+                    <div key={c.id} className="comment">
+                      <div className="comm-head">
+                        <strong>{c.studentEmail.split('@')[0]}</strong>
+                        <span className="date">{new Date(c.postedAt).toLocaleDateString()}</span>
+                      </div>
+                      <p>{c.content}</p>
+                      {c.studentEmail === user.email && (
+                        <button
+                          type="button"
+                          className="delete-comm"
+                          onClick={() => deleteComment(c.id, c.studentEmail)}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
-                    <p>{c.content}</p>
-                    {c.studentEmail === user.email && (
-                      <span className="delete-comm" onClick={() => deleteComment(c.id, c.studentEmail)}>Delete</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="add-comment">
-                <input 
-                   type="text" 
-                   value={newComment} 
-                   onChange={e => setNewComment(e.target.value)} 
-                   placeholder="Add a comment..." 
-                />
-                <button onClick={postComment}>Post</button>
-              </div>
-            </div>
+                  ))}
+                </div>
 
-            <div className="report-action">
-               <button className="btn-sm-danger" onClick={() => setShowReportForm(!showReportForm)}>Report this paper</button>
-               {showReportForm && (
-                 <div className="report-box">
-                    <textarea 
-                      value={reportReason} 
-                      onChange={e => setReportReason(e.target.value)}
-                      placeholder="Why are you reporting this? (e.g. Broken link, irrelevant file)" 
+                <div className="add-comment">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    aria-label="Add a comment"
+                  />
+                  <button type="button" className="paper-detail-post-btn" onClick={postComment}>
+                    Post
+                  </button>
+                </div>
+              </div>
+
+              <div className="report-action">
+                <button
+                  type="button"
+                  className="paper-detail-report-link"
+                  onClick={() => setShowReportForm(!showReportForm)}
+                >
+                  Report this paper
+                </button>
+                {showReportForm && (
+                  <div className="report-box">
+                    <textarea
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      placeholder="Why are you reporting this? (e.g. Broken link, irrelevant file)"
                     />
                     {reportError && <span className="error-text">{reportError}</span>}
-                    <button className="btn-submit" onClick={reportPaper}>Submit Report</button>
-                 </div>
-               )}
+                    <button type="button" className="btn-submit paper-detail-report-submit" onClick={reportPaper}>
+                      Submit Report
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-
           </div>
         </div>
       )}

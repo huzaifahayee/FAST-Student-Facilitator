@@ -1,0 +1,158 @@
+/*
+  FSF shared UI primitives — imported once from index.css.
+  Use optional utility classes on forms/cards; pages may also mirror tokens locally.
+*/
+
+.fsf-form input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.fsf-form textarea,
+.fsf-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme='light'] .fsf-form input:not([type='checkbox']):not([type='radio']):not([type='file']),
+[data-theme='light'] .fsf-form textarea,
+[data-theme='light'] .fsf-form select {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(2, 132, 199, 0.18);
+  color: var(--text-primary);
+}
+
+.fsf-form input:focus,
+.fsf-form textarea:focus,
+.fsf-form select:focus {
+  outline: none;
+  border-color: rgba(255, 59, 83, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 59, 83, 0.15);
+}
+
+[data-theme='light'] .fsf-form input:focus,
+[data-theme='light'] .fsf-form textarea:focus,
+[data-theme='light'] .fsf-form select:focus {
+  border-color: rgba(20, 58, 92, 0.45);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.fsf-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.fsf-btn-pill--primary {
+  background: var(--fsf-pill-cta-bg);
+  color: var(--fsf-pill-cta-text);
+  border: 1px solid var(--fsf-pill-cta-border);
+  box-shadow: var(--fsf-pill-cta-shadow);
+}
+
+.fsf-btn-pill--primary:hover {
+  transform: scale(1.04);
+  filter: brightness(1.05);
+}
+
+.fsf-btn-pill--ghost {
+  background: var(--fsf-pill-muted-bg);
+  color: var(--fsf-pill-muted-text);
+  border: 1px solid var(--fsf-pill-muted-border);
+  box-shadow: var(--fsf-pill-muted-shadow);
+}
+
+.fsf-btn-pill--ghost:hover {
+  border-color: rgba(255, 59, 83, 0.35);
+}
+
+/* iOS-style file row: hide native control; pill + filename on one row */
+.ios-file-field {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme='light'] .ios-file-field {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(2, 132, 199, 0.18);
+}
+
+.ios-file-field:focus-within {
+  outline: none;
+  border-color: rgba(255, 59, 83, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 59, 83, 0.15);
+}
+
+[data-theme='light'] .ios-file-field:focus-within {
+  border-color: rgba(20, 58, 92, 0.45);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.ios-file-field-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ios-file-field-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+[data-theme='light'] .ios-file-field-btn {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(2, 132, 199, 0.2);
+  color: #0a1628;
+}
+
+.ios-file-field-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}

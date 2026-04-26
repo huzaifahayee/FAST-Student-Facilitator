@@ -1,6 +1,6 @@
 .events-page {
     padding: 2rem;
-    color: white;
+    color: var(--text-primary);
 }
 
 .header-actions {
@@ -19,19 +19,19 @@
 }
 
 .upload-label {
-    background: rgba(255, 255, 255, 0.05);
-    color: #FFC107;
+    background: rgba(127, 127, 127, 0.08);
+    color: var(--accent-teal);
     padding: 0.7rem 1.2rem;
     border-radius: 10px;
     cursor: pointer;
-    border: 1px dashed rgba(255, 193, 7, 0.5);
+    border: 1px dashed var(--accent-teal);
     font-size: 0.9rem;
     transition: 0.3s;
     font-weight: 500;
 }
 
 .upload-label:hover {
-    background: rgba(255, 193, 7, 0.1);
+    background: rgba(255, 59, 83, 0.1);
     border-style: solid;
 }
 
@@ -44,6 +44,7 @@
 .title-section h1 {
     margin: 0;
     font-size: 1.8rem;
+    color: var(--text-primary);
 }
 
 .search-bar-container {
@@ -54,25 +55,25 @@
 .search-input {
     width: 100%;
     padding: 0.8rem 1.2rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(127, 127, 127, 0.08);
+    border: 1px solid rgba(127, 127, 127, 0.15);
     border-radius: 12px;
-    color: white;
+    color: var(--text-primary);
     font-size: 0.95rem;
     transition: all 0.3s ease;
 }
 
 .search-input:focus {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--primary-color, #FFC107);
+    background: rgba(127, 127, 127, 0.12);
+    border-color: var(--accent-teal);
     outline: none;
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.1);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .btn-group {
     display: flex;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(127, 127, 127, 0.1);
     padding: 0.3rem;
     border-radius: 12px;
 }
@@ -81,26 +82,38 @@
     padding: 0.6rem 1.2rem;
     border: none;
     background: transparent;
-    color: #888;
+    color: var(--text-secondary);
     cursor: pointer;
     border-radius: 10px;
     transition: all 0.3s ease;
 }
 
 .toggle-btn.active {
-    background: var(--primary-color, #FFC107);
-    color: #121212;
+    background: var(--accent-fill);
+    color: #ffffff;
     font-weight: bold;
 }
 
 .add-btn {
-    padding: 0.7rem 1.5rem;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 10px;
+    padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+    background: var(--accent-fill);
+    color: #ffffff;
+    border: 1px solid var(--fsf-pill-cta-border);
+    border-radius: var(--fsf-pill-radius);
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 700;
+    font-family: var(--font-main);
+    box-shadow: 0 4px 16px rgba(12, 45, 72, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme='dark'] .add-btn {
+    color: #ffffff;
+    box-shadow: var(--fsf-pill-cta-shadow);
+}
+
+.add-btn:hover {
+    transform: scale(1.04);
 }
 
 .event-grid {
@@ -110,11 +123,17 @@
 }
 
 .event-card {
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.35rem 1.4rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 0.85rem;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.events-page .event-card.glass-card:hover {
+    transform: translateY(-3px);
 }
 
 .card-header {
@@ -153,6 +172,74 @@
     color: #888;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     padding-top: 1rem;
+}
+
+.card-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.badge-plan {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+    border: 1px solid rgba(33, 150, 243, 0.4);
+    padding: 0.18rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
+.row-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.card-btn {
+    flex: 1;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.card-btn.small {
+    flex: 0 0 auto;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+}
+
+.card-btn.edit {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+    border-color: rgba(33, 150, 243, 0.4);
+}
+
+.card-btn.edit:hover {
+    background: #2196F3;
+    color: white;
+}
+
+.card-btn.delete {
+    background: rgba(244, 67, 54, 0.12);
+    color: #F44336;
+    border-color: rgba(244, 67, 54, 0.4);
+}
+
+.card-btn.delete:hover {
+    background: #F44336;
+    color: white;
 }
 
 /* Modal */
@@ -222,6 +309,31 @@
     height: 18px;
 }
 
+/* Date input + hint */
+.field-with-hint {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.field-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    margin-left: 0.2rem;
+}
+
+.field-hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-left: 0.2rem;
+    line-height: 1.4;
+}
+
+.field-hint strong {
+    color: #1a1a1a;
+}
+
 .form-actions {
     display: flex;
     gap: 1rem;
@@ -253,70 +365,675 @@
     transform: scale(0.98);
 }
 
-/* Semester Plan Table Styles */
-.semester-plan-table-container {
-    overflow-x: auto;
-    padding: 1rem;
-    border-radius: 16px;
-    margin-top: 1rem;
-    background: rgba(0, 0, 0, 0.05); /* Slight tint to define the area */
+/* —— Post Event modal: iOS sheet, noir + crimson (scoped; replaces yellow / flat gray in admin) —— */
+.events-page .events-modal-backdrop.modal-backdrop {
+    background: rgba(0, 0, 0, 0.52);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
 }
 
-.semester-plan-table {
+.events-page .campus-event-modal.modal.glass-card {
+    color-scheme: dark;
+    --text-primary: rgba(248, 248, 250, 0.96);
+    --text-secondary: rgba(255, 255, 255, 0.62);
+    --text-muted: rgba(255, 255, 255, 0.42);
+    --text-on-card: rgba(248, 248, 250, 0.96);
+    --text-on-card-secondary: rgba(255, 255, 255, 0.62);
+    --text-on-card-muted: rgba(255, 255, 255, 0.42);
+
+    position: relative;
+    width: min(100vw - 32px, 480px);
+    max-height: min(92vh, 720px);
+    overflow-y: auto;
+    padding: 1.5rem 1.35rem 1.6rem;
+    gap: 1rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 59, 83, 0.22);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 24px 64px rgba(0, 0, 0, 0.55),
+        0 0 48px rgba(255, 59, 83, 0.1);
+    transform: none;
+}
+
+[data-theme='light'] .events-page .campus-event-modal.modal.glass-card {
+    background-image:
+        radial-gradient(110% 100% at 0% 0%, rgba(255, 138, 154, 0.22) 0%, transparent 52%),
+        radial-gradient(90% 110% at 100% 100%, rgba(255, 59, 83, 0.2) 0%, transparent 58%),
+        linear-gradient(165deg, #26262c 0%, #121214 100%);
+    background-origin: border-box;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+}
+
+[data-theme='dark'] .events-page .campus-event-modal.modal.glass-card {
+    background-image:
+        radial-gradient(110% 100% at 0% 0%, rgba(255, 138, 154, 0.2) 0%, transparent 52%),
+        radial-gradient(90% 110% at 100% 100%, rgba(255, 59, 83, 0.18) 0%, transparent 58%),
+        linear-gradient(165deg, #222226 0%, #101012 100%);
+    background-origin: border-box;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+}
+
+.events-page .campus-event-modal.modal.glass-card:hover {
+    transform: none;
+    border-color: rgba(255, 59, 83, 0.3);
+}
+
+.events-page .campus-event-modal h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.events-page .campus-event-modal form {
+    gap: 0.85rem;
+}
+
+.events-page .campus-event-modal input,
+.events-page .campus-event-modal textarea,
+.events-page .campus-event-modal select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.95);
+    font-family: var(--font-main, system-ui, sans-serif);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.events-page .campus-event-modal textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.events-page .campus-event-modal input::placeholder,
+.events-page .campus-event-modal textarea::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.events-page .campus-event-modal input:focus,
+.events-page .campus-event-modal textarea:focus,
+.events-page .campus-event-modal select:focus {
+    outline: none;
+    border-color: rgba(255, 59, 83, 0.55);
+    box-shadow: 0 0 0 3px rgba(255, 59, 83, 0.2);
+}
+
+.events-page .campus-event-modal .field-label {
+    color: rgba(255, 200, 206, 0.85);
+}
+
+.events-page .campus-event-modal .field-hint {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.events-page .campus-event-modal .field-hint strong {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.events-page .campus-event-modal .checkbox-label {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.9rem;
+}
+
+.events-page .campus-event-modal .form-actions {
+    margin-top: 0.5rem;
+    gap: 0.75rem;
+}
+
+.events-page .campus-event-modal .form-actions button[type='button'] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.events-page .campus-event-modal .form-actions button[type='button']:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.32);
+}
+
+.events-page .campus-event-modal .form-actions button[type='button']:active {
+    transform: scale(0.98);
+}
+
+.events-page .campus-event-modal .submit-btn {
+    flex: 1;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    z-index: 1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme='light'] .events-page .campus-event-modal .submit-btn {
+    background: var(--accent-fill);
+    color: #ffffff;
+    box-shadow: 0 4px 18px rgba(12, 45, 72, 0.35);
+}
+
+[data-theme='light'] .events-page .campus-event-modal .submit-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 28px rgba(12, 45, 72, 0.45);
+}
+
+[data-theme='dark'] .events-page .campus-event-modal .submit-btn {
+    background: var(--accent-fill);
+    color: #ffffff;
+    box-shadow: var(--fsf-pill-cta-shadow);
+}
+
+[data-theme='dark'] .events-page .campus-event-modal .submit-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 32px rgba(255, 59, 83, 0.48);
+}
+
+.events-page .campus-event-modal .submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* Semester Plan — iOS grouped table (card + row colors are theme-specific) */
+.events-page .semester-plan-table-container.ios-grouped-plan {
+    margin-top: 1rem;
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 22px;
+    -webkit-backdrop-filter: saturate(180%) blur(28px);
+    backdrop-filter: saturate(180%) blur(28px);
+}
+
+[data-theme='dark'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card {
+    --text-primary: rgba(248, 248, 250, 0.96);
+    --text-secondary: rgba(255, 255, 255, 0.52);
+    --text-muted: rgba(255, 255, 255, 0.38);
+    --text-on-card: rgba(248, 248, 250, 0.96);
+    --text-on-card-secondary: rgba(255, 255, 255, 0.52);
+    --text-on-card-muted: rgba(255, 255, 255, 0.38);
+    border: 1px solid rgba(255, 59, 83, 0.14);
+    background-image:
+        linear-gradient(165deg, rgba(255, 59, 83, 0.06) 0%, transparent 42%),
+        linear-gradient(180deg, rgba(34, 34, 38, 0.96) 0%, rgba(12, 12, 14, 0.98) 100%);
+    background-origin: border-box;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 20px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='light'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card {
+    border: 1px solid rgba(2, 132, 199, 0.16);
+    background-color: rgba(255, 255, 255, 0.96);
+    background-image:
+        linear-gradient(165deg, rgba(2, 132, 199, 0.06) 0%, transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 249, 252, 1) 100%);
+    background-origin: border-box;
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.95) inset,
+        0 10px 36px rgba(2, 132, 199, 0.08),
+        0 0 0 1px rgba(2, 132, 199, 0.06);
+}
+
+[data-theme='light'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card:hover,
+[data-theme='dark'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card:hover {
+    transform: none;
+}
+
+[data-theme='dark'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card:hover {
+    border-color: rgba(255, 59, 83, 0.24);
+    background-image:
+        linear-gradient(165deg, rgba(255, 59, 83, 0.09) 0%, transparent 42%),
+        linear-gradient(180deg, rgba(38, 38, 44, 0.98) 0%, rgba(14, 14, 18, 1) 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 22px 60px rgba(0, 0, 0, 0.58),
+        0 0 40px rgba(255, 59, 83, 0.06);
+}
+
+[data-theme='light'] .events-page .semester-plan-table-container.ios-grouped-plan.glass-card:hover {
+    border-color: rgba(2, 132, 199, 0.22);
+    background-image:
+        linear-gradient(165deg, rgba(2, 132, 199, 0.08) 0%, transparent 42%),
+        linear-gradient(180deg, #ffffff 0%, rgba(238, 247, 252, 1) 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 1) inset,
+        0 14px 40px rgba(2, 132, 199, 0.1),
+        0 0 0 1px rgba(2, 132, 199, 0.08);
+}
+
+/* Shared table geometry (both themes) — was only under [data-theme='dark'], which broke light layout */
+.events-page .ios-grouped-plan .semester-plan-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 8px;
-    color: #333; /* Dark text for light theme */
+    border-spacing: 0;
+    table-layout: auto;
+    font-family: var(--font-main, system-ui, -apple-system, sans-serif);
 }
 
-.semester-plan-table th {
-    padding: 1rem 1.5rem;
+.events-page .ios-grouped-plan .semester-plan-table thead th {
+    padding: 0.65rem 1.1rem 0.7rem;
     text-align: left;
-    color: #f39c12; /* Brand orange for headers */
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1.5px;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
 }
 
-.semester-plan-table td {
-    padding: 1.2rem 1.5rem;
-    background: rgba(255, 255, 255, 0.7); /* Semi-transparent white row */
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    color: #1a1a1a;
+.events-page .ios-grouped-plan .semester-plan-table td {
+    padding: 0.95rem 1.1rem;
+    vertical-align: top;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-radius: 0;
 }
 
-.semester-plan-table td:first-child {
-    border-left: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 12px 0 0 12px;
+.events-page .ios-grouped-plan .semester-plan-table tbody tr {
+    transition: background 0.18s ease, color 0.18s ease;
 }
 
-.semester-plan-table td:last-child {
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 0 12px 12px 0;
+.events-page .ios-grouped-plan .semester-plan-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.semester-plan-table tr:hover td {
-    background: rgba(255, 255, 255, 0.9);
+/* Never use flex/grid on <td> here — it breaks table column alignment vs <thead> */
+.events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .bold-cell .semester-kind-pill {
+    display: block;
+    margin-bottom: 0.45rem;
+}
+
+.events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .bold-cell .semester-title-text {
+    display: block;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table {
+    color: rgba(248, 248, 250, 0.94);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table thead {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table th {
+    color: rgba(255, 150, 160, 0.75);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table td {
+    color: rgba(248, 248, 250, 0.9);
+    background: rgba(255, 255, 255, 0.025);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr:hover td {
+    background: rgba(255, 59, 83, 0.07);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr:active td {
+    background: rgba(255, 59, 83, 0.1);
+}
+
+/* Dashboard welcome-banner style for holidays & campus events (non-academic) */
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero {
+    background:
+        radial-gradient(120% 200% at 0% 45%, rgba(255, 138, 154, 0.5) 0%, rgba(255, 138, 154, 0) 52%),
+        radial-gradient(100% 180% at 100% 55%, rgba(255, 59, 83, 0.38) 0%, rgba(255, 59, 83, 0) 58%),
+        linear-gradient(110deg, #2a1a1d 0%, #18181b 58%, #121214 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-holiday {
+    background:
+        radial-gradient(125% 200% at 0% 40%, rgba(255, 150, 164, 0.55) 0%, rgba(255, 150, 164, 0) 52%),
+        radial-gradient(105% 190% at 100% 60%, rgba(255, 59, 83, 0.45) 0%, rgba(255, 59, 83, 0) 60%),
+        linear-gradient(110deg, #321a22 0%, #1a181c 55%, #101012 100%);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td {
+    background: transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td:first-child {
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td:last-child {
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:hover td {
+    background: transparent;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:hover {
+    background:
+        radial-gradient(120% 200% at 0% 42%, rgba(255, 160, 172, 0.58) 0%, rgba(255, 160, 172, 0) 52%),
+        radial-gradient(100% 180% at 100% 52%, rgba(255, 80, 100, 0.48) 0%, rgba(255, 80, 100, 0) 58%),
+        linear-gradient(110deg, #322026 0%, #1c1a1f 56%, #151517 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 10px 36px rgba(255, 59, 83, 0.12);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-holiday:hover {
+    background:
+        radial-gradient(125% 200% at 0% 38%, rgba(255, 170, 182, 0.62) 0%, rgba(255, 170, 182, 0) 52%),
+        radial-gradient(105% 190% at 100% 58%, rgba(255, 75, 95, 0.52) 0%, rgba(255, 75, 95, 0) 60%),
+        linear-gradient(110deg, #3a1e28 0%, #201c20 54%, #121214 100%);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:active {
+    filter: brightness(0.97);
+}
+
+.events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .semester-title-text {
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .semester-title-text {
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
+}
+
+.events-page .ios-grouped-plan .semester-kind-pill {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-kind-pill {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-kind-pill--holiday {
+    background: rgba(255, 59, 83, 0.22);
+    border-color: rgba(255, 150, 164, 0.55);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .venue-text {
+    color: rgba(255, 255, 255, 0.76);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .venue-pin-icon {
+    color: rgba(255, 200, 206, 0.95);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table .academic-row td:first-child {
+    box-shadow: inset 3px 0 0 0 rgba(255, 59, 83, 0.75);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .bold-cell {
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.98);
+}
+
+.events-page .ios-grouped-plan .venue-cell {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    max-width: 100%;
+}
+
+.events-page .ios-grouped-plan .venue-pin-icon {
+    flex-shrink: 0;
+    margin-top: 0.12rem;
+    display: flex;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .venue-pin-icon {
+    color: rgba(255, 59, 83, 0.85);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .venue-text {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.88rem;
+}
+
+.events-page .ios-grouped-plan .semester-plan-th-actions {
+    width: 140px;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.edit {
+    background: rgba(255, 59, 83, 0.12);
+    color: #ffb3bc;
+    border-color: rgba(255, 59, 83, 0.35);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.edit:hover {
+    background: rgba(255, 59, 83, 0.28);
+    color: #ffffff;
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.delete {
+    background: rgba(255, 59, 83, 0.08);
+    color: #ff8a96;
+    border-color: rgba(255, 59, 83, 0.32);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.delete:hover {
+    background: rgba(255, 59, 83, 0.45);
+    color: #ffffff;
+    border-color: rgba(255, 59, 83, 0.55);
+}
+
+[data-theme='dark'] .events-page .ios-grouped-plan .empty-row {
+    text-align: center;
+    padding: 3.5rem 1.5rem !important;
+    color: rgba(255, 255, 255, 0.42);
+    font-style: italic;
+    font-size: 0.95rem;
+    background: transparent !important;
+    border-bottom: none !important;
+}
+
+/*
+ * Light mode — same structure as dark (grouped rows, radii, header band),
+ * recolored to white + navy/sky (no pink row fills; no flex on cells).
+ */
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table {
+    color: #0c2744;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table thead {
+    background: linear-gradient(115deg, #143a5c 0%, #0f2d4a 48%, #0c2744 100%);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table th {
+    color: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table td {
+    color: #0c2744;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(20, 58, 92, 0.1);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr:hover td {
+    background: rgba(2, 132, 199, 0.06);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr:active td {
+    background: rgba(2, 132, 199, 0.1);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero {
+    background:
+        radial-gradient(120% 200% at 0% 45%, rgba(125, 211, 252, 0.35) 0%, transparent 52%),
+        radial-gradient(100% 180% at 100% 55%, rgba(20, 58, 92, 0.12) 0%, transparent 58%),
+        linear-gradient(110deg, #f0f7fc 0%, #ffffff 58%, #f8fafc 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-holiday {
+    background:
+        radial-gradient(125% 200% at 0% 40%, rgba(56, 189, 248, 0.28) 0%, transparent 52%),
+        radial-gradient(105% 190% at 100% 60%, rgba(20, 58, 92, 0.1) 0%, transparent 60%),
+        linear-gradient(110deg, #e8f4fc 0%, #ffffff 55%, #f8fafc 100%);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td {
+    background: transparent;
+    border-bottom-color: rgba(20, 58, 92, 0.12);
+    color: #0c2744;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td:first-child {
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero td:last-child {
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:hover td {
+    background: transparent;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:hover {
+    background:
+        radial-gradient(120% 200% at 0% 42%, rgba(125, 211, 252, 0.45) 0%, transparent 52%),
+        radial-gradient(100% 180% at 100% 52%, rgba(20, 58, 92, 0.14) 0%, transparent 58%),
+        linear-gradient(110deg, #e8f2fa 0%, #ffffff 56%, #f1f5f9 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.98),
+        0 8px 28px rgba(2, 132, 199, 0.08);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-holiday:hover {
+    background:
+        radial-gradient(125% 200% at 0% 38%, rgba(56, 189, 248, 0.38) 0%, transparent 52%),
+        radial-gradient(105% 190% at 100% 58%, rgba(20, 58, 92, 0.12) 0%, transparent 60%),
+        linear-gradient(110deg, #dff2fc 0%, #ffffff 54%, #f8fafc 100%);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero:active {
+    filter: brightness(0.98);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .semester-title-text {
+    color: #0c2744;
+    text-shadow: none;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-kind-pill {
+    color: #143a5c;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(20, 58, 92, 0.2);
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.08);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-kind-pill--holiday {
+    color: #ffffff;
+    background: linear-gradient(115deg, #0f2d4a 0%, #143a5c 100%);
+    border-color: rgba(125, 211, 252, 0.45);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .venue-text {
+    color: rgba(20, 58, 92, 0.72);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table tbody tr.semester-row-hero .venue-pin-icon {
+    color: #143a5c;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table .academic-row td:first-child {
+    box-shadow: inset 3px 0 0 0 rgba(20, 58, 92, 0.75);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .bold-cell {
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.02em;
+    color: #0c2744;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .venue-text {
+    color: rgba(20, 58, 92, 0.65);
+    font-size: 0.88rem;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .venue-pin-icon {
+    color: #143a5c;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.edit {
+    background: rgba(2, 132, 199, 0.08);
+    color: #143a5c;
+    border-color: rgba(20, 58, 92, 0.28);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.edit:hover {
+    background: rgba(2, 132, 199, 0.16);
+    color: #0c2744;
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.delete {
+    background: rgba(2, 132, 199, 0.05);
+    color: #1e4976;
+    border-color: rgba(20, 58, 92, 0.22);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .semester-plan-table .card-btn.delete:hover {
+    background: rgba(2, 132, 199, 0.14);
+    color: #0c2744;
+    border-color: rgba(20, 58, 92, 0.35);
+}
+
+[data-theme='light'] .events-page .ios-grouped-plan .empty-row {
+    color: rgba(20, 58, 92, 0.48);
+    background: transparent !important;
+    border-bottom: none !important;
 }
 
 .bold-cell {
     font-weight: 700;
-    color: #000;
-    font-size: 1rem;
-}
-
-.academic-row td {
-    border-left: 4px solid #2196F3; /* Blue highlight for academic items */
-}
-
-.empty-row {
-    text-align: center;
-    padding: 4rem !important;
-    color: #888;
-    font-style: italic;
-    background: transparent !important;
 }
 
 @media (max-width: 768px) {

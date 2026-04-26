@@ -7,11 +7,22 @@ const CampusEventBoard = ({ user }) => {
     const [viewMode, setViewMode] = useState('BOARD'); // 'BOARD' or 'PLAN'
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({
-        title: '', description: '', eventDate: '', venue: '', organizer: '', category: 'SOCIAL', semesterPlan: false
+    const [editingId, setEditingId] = useState(null);
+
+    const blankForm = () => ({
+        title: '',
+        description: '',
+        eventDate: '',
+        venue: '',
+        organizer: '',
+        category: 'SOCIAL',
+        semesterPlan: false,
     });
+    const [formData, setFormData] = useState(blankForm());
 
     const [searchQuery, setSearchQuery] = useState('');
+
+    const isAdmin = user?.role === 'ADMIN';
 
     useEffect(() => {
         loadEvents();
@@ -46,31 +57,69 @@ const CampusEventBoard = ({ user }) => {
         setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
     };
 
+    const openCreateModal = () => {
+        setEditingId(null);
+        setFormData(blankForm());
+        setShowModal(true);
+    };
+
+    const openEditModal = (event) => {
+        setEditingId(event.id);
+        setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            eventDate: event.eventDate || '',
+            venue: event.venue || '',
+            organizer: event.organizer || '',
+            category: event.category || 'SOCIAL',
+            semesterPlan: !!event.semesterPlan,
+        });
+        setShowModal(true);
+    };
+
+    const formatPickedDate = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Submitting Event Data:", formData);
-        
         if (!user || !user.email) {
             alert("User session error. Please log in again.");
             return;
         }
 
+        const isEditing = editingId !== null;
+        const url = isEditing
+            ? `http://localhost:8080/api/events/${editingId}?requesterEmail=${encodeURIComponent(user.email)}`
+            : 'http://localhost:8080/api/events';
+        const method = isEditing ? 'PUT' : 'POST';
+
         try {
-            const res = await fetch('http://localhost:8080/api/events', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    ...formData, 
-                    ownerEmail: user.email, 
-                    approved: user.role === 'ADMIN' // Auto-approve only if truly admin
-                })
+                body: JSON.stringify({
+                    ...formData,
+                    ownerEmail: user.email,
+                    approved: isAdmin,
+                }),
             });
-            
+
             if (res.ok) {
-                console.log("Submission successful!");
-                alert("Event added successfully!");
+                if (isEditing) {
+                    alert("Event updated.");
+                } else {
+                    const dest = formData.semesterPlan
+                        ? 'Event Board (also added to Semester Plan)'
+                        : 'Event Board';
+                    alert(`Event added to ${dest}.`);
+                }
                 setShowModal(false);
-                setFormData({ title: '', description: '', eventDate: '', venue: '', organizer: '', category: 'SOCIAL', semesterPlan: false });
+                setEditingId(null);
+                setFormData(blankForm());
                 loadEvents();
                 loadSemesterPlan();
             } else {
@@ -84,22 +133,39 @@ const CampusEventBoard = ({ user }) => {
         }
     };
 
+    const handleDelete = async (event) => {
+        if (!window.confirm(`Delete "${event.title}"?`)) return;
+        try {
+            const res = await fetch(`http://localhost:8080/api/events/${event.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadEvents();
+                loadSemesterPlan();
+            } else {
+                alert("Delete failed.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network Error: Could not connect to backend.");
+        }
+    };
+
     const handleUploadPlan = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('ownerEmail', user.email);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        formDataUpload.append('ownerEmail', user.email);
 
         try {
             const res = await fetch('http://localhost:8080/api/events/upload-plan', {
                 method: 'POST',
-                body: formData
+                body: formDataUpload,
             });
             if (res.ok) {
                 alert("Semester Plan uploaded successfully!");
                 loadSemesterPlan();
+                loadEvents();
             } else {
                 alert("Upload failed.");
             }
@@ -111,10 +177,33 @@ const CampusEventBoard = ({ user }) => {
 
     const filteredEvents = (viewMode === 'BOARD' ? events : semesterPlan).filter(event => {
         const query = searchQuery.toLowerCase();
-        return event.title.toLowerCase().includes(query) || 
+        return event.title.toLowerCase().includes(query) ||
                event.eventDate.includes(query) ||
                event.category.toLowerCase().includes(query);
     });
+
+    /** Imported calendar holidays use Administration + HOLIDAY; Add Event never does. */
+    const isImportedCalendarHoliday = (event) =>
+        (event.category || '').toUpperCase() === 'HOLIDAY' &&
+        (event.organizer || '').trim() === 'Administration';
+
+    const semesterPlanRowClassName = (event) => {
+        const c = (event.category || '').toUpperCase();
+        if (c === 'ACADEMIC') return 'academic-row';
+        if (isImportedCalendarHoliday(event)) return 'semester-row-hero semester-row-holiday';
+        return 'semester-row-hero semester-row-event';
+    };
+
+    /** 'holiday' only for plan-upload holidays; 'event' for Add Event (and other non-academic). */
+    const semesterPlanHeroKind = (event) => {
+        const c = (event.category || '').toUpperCase();
+        if (c === 'ACADEMIC') return null;
+        if (isImportedCalendarHoliday(event)) return 'holiday';
+        return 'event';
+    };
+
+    const canEdit = (event) =>
+        isAdmin || (user?.email && event.ownerEmail === user.email);
 
     return (
         <div className="events-page">
@@ -128,22 +217,22 @@ const CampusEventBoard = ({ user }) => {
                 </div>
 
                 <div className="search-bar-container">
-                    <input 
-                        type="text" 
-                        placeholder="Search by name or date (YYYY-MM-DD)..." 
+                    <input
+                        type="text"
+                        placeholder="Search by name or date (YYYY-MM-DD)..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="search-input"
                     />
                 </div>
-                
-                {user?.role === 'ADMIN' && (
+
+                {isAdmin && (
                     <div className="admin-actions">
                         <label className="upload-label">
                             📁 Upload Plan (XLS)
                             <input type="file" onChange={handleUploadPlan} hidden accept=".xls,.xlsx" />
                         </label>
-                        <button className="add-btn" onClick={() => setShowModal(true)}>+ Post Event</button>
+                        <button className="add-btn" onClick={openCreateModal}>+ Post Event</button>
                     </div>
                 )}
             </div>
@@ -163,33 +252,79 @@ const CampusEventBoard = ({ user }) => {
                                     <span>📍 {event.venue}</span>
                                     <span>👤 {event.organizer}</span>
                                 </div>
+                                {event.semesterPlan && (
+                                    <div className="card-badges">
+                                        <span className="badge-plan">Also on Semester Plan</span>
+                                    </div>
+                                )}
+                                {canEdit(event) && (
+                                    <div className="card-actions">
+                                        <button type="button" className="card-btn edit" onClick={() => openEditModal(event)}>Edit</button>
+                                        {isAdmin && (
+                                            <button type="button" className="card-btn delete" onClick={() => handleDelete(event)}>Delete</button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
                         {events.length === 0 && <p className="empty-msg">No approved events found.</p>}
                     </div>
                 ) : (
-                    <div className="semester-plan-table-container glass-card">
+                    <div className="semester-plan-table-container glass-card ios-grouped-plan">
                         <table className="semester-plan-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Course / Event</th>
-                                    <th>Time / Details</th>
-                                    <th>Venue</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Course / Event</th>
+                                    <th scope="col">Time / Details</th>
+                                    <th scope="col">Venue</th>
+                                    {isAdmin && <th scope="col" className="semester-plan-th-actions">Actions</th>}
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredEvents.map(event => (
-                                    <tr key={event.id} className={event.category === 'ACADEMIC' ? 'academic-row' : ''}>
+                                {filteredEvents.map((event) => {
+                                    const heroKind = semesterPlanHeroKind(event);
+                                    return (
+                                    <tr key={event.id} className={semesterPlanRowClassName(event)}>
                                         <td>{new Date(event.eventDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                        <td className="bold-cell">{event.title}</td>
+                                        <td className="bold-cell">
+                                            {heroKind && (
+                                                <span
+                                                    className={`semester-kind-pill${heroKind === 'holiday' ? ' semester-kind-pill--holiday' : ''}`}
+                                                >
+                                                    {heroKind === 'holiday' ? 'Holiday' : 'Event'}
+                                                </span>
+                                            )}
+                                            <span className="semester-title-text">{event.title}</span>
+                                        </td>
                                         <td>{event.description}</td>
-                                        <td>📍 {event.venue}</td>
+                                        <td>
+                                            <span className="venue-cell">
+                                                <span className="venue-pin-icon" aria-hidden>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                                                        <circle cx="12" cy="11" r="2.5" fill="currentColor" />
+                                                    </svg>
+                                                </span>
+                                                <span className="venue-text">{event.venue}</span>
+                                            </span>
+                                        </td>
+                                        {isAdmin && (
+                                            <td>
+                                                {canEdit(event) && (
+                                                    <div className="row-actions">
+                                                        <button type="button" className="card-btn edit small" onClick={() => openEditModal(event)}>Edit</button>
+                                                        <button type="button" className="card-btn delete small" onClick={() => handleDelete(event)}>Delete</button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        )}
                                     </tr>
-                                ))}
+                                    );
+                                })}
                                 {semesterPlan.length === 0 && (
                                     <tr>
-                                        <td colSpan="4" className="empty-row">No semester plan items found. Upload or propose one!</td>
+                                        <td colSpan={isAdmin ? 5 : 4} className="empty-row">No semester plan items found. Upload or propose one!</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -199,13 +334,39 @@ const CampusEventBoard = ({ user }) => {
             )}
 
             {showModal && (
-                <div className="modal-backdrop">
-                    <div className="modal glass-card">
-                        <h2>Post New Event / Plan Item</h2>
+                <div
+                    className="modal-backdrop events-modal-backdrop"
+                    role="presentation"
+                    onClick={() => { setShowModal(false); setEditingId(null); }}
+                >
+                    <div
+                        className="modal glass-card campus-event-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2>{editingId ? 'Edit Event / Plan Item' : 'Post New Event / Plan Item'}</h2>
                         <form onSubmit={handleSubmit}>
                             <input type="text" name="title" placeholder="Event Title" value={formData.title} onChange={handleInputChange} required />
                             <textarea name="description" placeholder="Short Description" value={formData.description} onChange={handleInputChange} required />
-                            <input type="date" name="eventDate" value={formData.eventDate} onChange={handleInputChange} required />
+
+                            <div className="field-with-hint">
+                                <label className="field-label" htmlFor="eventDate">Event Date</label>
+                                <input
+                                    id="eventDate"
+                                    type="date"
+                                    name="eventDate"
+                                    value={formData.eventDate}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                                <small className="field-hint">
+                                    {formData.eventDate
+                                        ? <>Selected: <strong>{formatPickedDate(formData.eventDate)}</strong></>
+                                        : 'Tip: use the calendar picker — typing day/month manually depends on your browser locale.'}
+                                </small>
+                            </div>
+
                             <input type="text" name="venue" placeholder="Venue" value={formData.venue} onChange={handleInputChange} required />
                             <input type="text" name="organizer" placeholder="Organizer" value={formData.organizer} onChange={handleInputChange} required />
                             <select name="category" value={formData.category} onChange={handleInputChange}>
@@ -214,13 +375,20 @@ const CampusEventBoard = ({ user }) => {
                                 <option value="SPORTS">Sports</option>
                                 <option value="HOLIDAY">Holiday</option>
                             </select>
+
                             <label className="checkbox-label">
-                                <input type="checkbox" name="semesterPlan" checked={formData.semesterPlan} onChange={handleInputChange} />
-                                Add to Semester Plan
+                                <input
+                                    type="checkbox"
+                                    name="semesterPlan"
+                                    checked={formData.semesterPlan}
+                                    onChange={handleInputChange}
+                                />
+                                Also add to Semester Plan
                             </label>
+
                             <div className="form-actions">
-                                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="submit-btn">Propose</button>
+                                <button type="button" onClick={() => { setShowModal(false); setEditingId(null); }}>Cancel</button>
+                                <button type="submit" className="submit-btn">{editingId ? 'Save Changes' : 'Propose'}</button>
                             </div>
                         </form>
                     </div>

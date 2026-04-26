@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { RefreshCw } from 'lucide-react';
+import IosPickerField from '../components/IosPickerField';
 import './Carpool.css';
+
+const VEHICLE_OPTIONS = [
+  { value: 'Car', label: 'Car' },
+  { value: 'Bike', label: 'Bike' },
+  { value: 'InDrive with stop', label: 'InDrive with stop' },
+];
 
 /**
  * Carpool Page
@@ -18,19 +26,36 @@ const Carpool = ({ user }) => {
   });
   const [currentCheckpoint, setCurrentCheckpoint] = useState('');
   const [validationError, setValidationError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadRides = useCallback(async () => {
+    const res = await fetch('http://localhost:8080/api/rides');
+    const data = await res.json();
+    setRides(Array.isArray(data) ? data : []);
+  }, []);
 
   // Fetch rides on mount
   useEffect(() => {
-    fetchRides();
-  }, []);
+    loadRides().catch((err) => console.error('Failed to fetch rides', err));
+  }, [loadRides]);
 
-  const fetchRides = async () => {
+  const fetchRides = () => {
+    loadRides().catch((err) => console.error('Failed to fetch rides', err));
+  };
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    const started = Date.now();
     try {
-      const res = await fetch('http://localhost:8080/api/rides');
-      const data = await res.json();
-      setRides(data);
+      await loadRides();
     } catch (err) {
-      console.error("Failed to fetch rides", err);
+      console.error('Failed to fetch rides', err);
+    } finally {
+      const minMs = 520;
+      const wait = Math.max(0, minMs - (Date.now() - started));
+      await new Promise((r) => setTimeout(r, wait));
+      setIsRefreshing(false);
     }
   };
 
@@ -108,7 +133,16 @@ const Carpool = ({ user }) => {
 
       <div className="carpool-actions">
         <button className="primary-btn" onClick={() => setIsOffering(true)}>Offer a Ride</button>
-        <button className="secondary-btn" onClick={fetchRides}>Refresh List</button>
+        <button
+          type="button"
+          className={`secondary-btn cp-refresh-btn${isRefreshing ? ' is-refreshing' : ''}`}
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          aria-busy={isRefreshing}
+        >
+          <RefreshCw className="cp-refresh-icon" size={18} strokeWidth={2.4} aria-hidden />
+          {isRefreshing ? 'Refreshing…' : 'Refresh List'}
+        </button>
       </div>
 
       {isOffering && (
@@ -128,15 +162,13 @@ const Carpool = ({ user }) => {
               <input type="number" placeholder="Seats" min="1" max="4" required 
                 onChange={e => setNewRide({...newRide, availableSeats: e.target.value})} />
               
-              <select 
-                className="form-select"
-                onChange={e => setNewRide({...newRide, vehicleType: e.target.value})}
+              <IosPickerField
+                className="cp-vehicle-picker"
                 value={newRide.vehicleType}
-              >
-                <option value="Car">Car</option>
-                <option value="Bike">Bike</option>
-                <option value="InDrive with stop">InDrive with stop</option>
-              </select>
+                onChange={(v) => setNewRide({ ...newRide, vehicleType: v })}
+                options={VEHICLE_OPTIONS}
+                sheetTitle="Vehicle type"
+              />
 
               <input type="text" placeholder="Phone (e.g., 03001234567)" required 
                 onChange={e => setNewRide({...newRide, contactInfo: e.target.value})} />
@@ -173,7 +205,7 @@ const Carpool = ({ user }) => {
           <h3>Available Rides</h3>
         </div>
 
-        <div className="rides-list">
+        <div className={`rides-list${isRefreshing ? ' rides-list--refreshing' : ''}`}>
           {rides.length > 0 ? (
             rides.map((ride, i) => (
               <div key={i} className="ride-card glass-card">
@@ -194,7 +226,7 @@ const Carpool = ({ user }) => {
                       {ride.availableSeats} {ride.availableSeats === 1 ? 'Seat' : 'Seats'}
                     </div>
                     <div className={`status-badge ${ride.approved ? 'approved' : 'pending'}`}>
-                      {ride.approved ? 'Approved ✅' : 'Pending Review ⏳'}
+                      {ride.approved ? 'Approved' : 'Pending Review'}
                     </div>
                   </div>
                 </div>
@@ -204,10 +236,10 @@ const Carpool = ({ user }) => {
                     <span className="driver-name">{ride.driverName}</span>
                   </div>
                   <div className="contact-info">
-                    <span className="contact-label">📞 Contact:</span>
+                    <span className="contact-label">Contact:</span>
                     <span className="contact-value">{ride.contactInfo}</span>
                   </div>
-                  <button className="report-btn" onClick={() => handleFlag(ride.id)}>🚩 Report</button>
+                  <button className="report-btn" onClick={() => handleFlag(ride.id)}>Report</button>
                 </div>
               </div>
             ))

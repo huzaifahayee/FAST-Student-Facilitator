@@ -9,7 +9,9 @@
 }
 
 .carpool-header h2 {
-  font-size: 28px;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 4px;
 }
 
@@ -21,38 +23,124 @@
 .carpool-actions {
   display: flex;
   gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.primary-btn {
-  background: var(--accent-teal);
-  color: var(--bg-deep);
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s;
+.cp-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
-.primary-btn:hover {
-  transform: scale(1.05);
+.cp-refresh-btn .cp-refresh-icon {
+  flex-shrink: 0;
 }
 
-.secondary-btn {
-  background: var(--glass-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
+.cp-refresh-btn.is-refreshing .cp-refresh-icon {
+  animation: cp-refresh-spin 0.72s linear infinite;
 }
+
+@keyframes cp-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cp-refresh-btn:disabled {
+  cursor: wait;
+  opacity: 0.94;
+}
+
+/* Sizing: global .primary-btn / .secondary-btn use --fsf-pill-pad-* (Lost & Found tab reference) */
+
+/* Colors / shadows: global .primary-btn & .secondary-btn (index.css pill tokens) */
 
 .rides-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   margin-top: var(--spacing-md);
+  transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+.rides-list--refreshing {
+  pointer-events: none;
+  opacity: 0.88;
+  filter: saturate(0.88);
+}
+
+.rides-list--refreshing .ride-card {
+  animation: cp-refresh-card-pulse 1s ease-in-out infinite;
+}
+
+@keyframes cp-refresh-card-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-refresh-btn.is-refreshing .cp-refresh-icon {
+    animation: none;
+  }
+
+  .rides-list--refreshing .ride-card {
+    animation: none;
+  }
+
+  .rides-list--refreshing {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+/*
+  Light: visible dark-blue *gradient* frame (multi-stop so a 3px ring doesn’t read flat).
+  Inner fill stays white; outer layer is clipped to the border box only.
+*/
+[data-theme='light'] .rides-list .ride-card.glass-card:not(.empty-state) {
+  border: 3px solid transparent;
+  background-image:
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    linear-gradient(
+      128deg,
+      #020910 0%,
+      #0c2840 18%,
+      #1a4d73 42%,
+      #2f6fa3 52%,
+      #153a55 72%,
+      #050d16 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  -webkit-background-clip: padding-box, border-box;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+[data-theme='light'] .rides-list .ride-card.glass-card:not(.empty-state):hover {
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    linear-gradient(
+      128deg,
+      #030d18 0%,
+      #0f3250 18%,
+      #1f5682 42%,
+      #3b7eb8 52%,
+      #174060 72%,
+      #060f1c 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  -webkit-background-clip: padding-box, border-box;
 }
 
 .empty-state {
@@ -165,20 +253,34 @@
   border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s ease;
 }
 
 .add-btn:hover:not(:disabled) {
-  background: var(--accent-glow);
-  box-shadow: 0 0 10px var(--accent-teal);
+  transform: scale(1.06);
 }
 
 .form-btns {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--glass-border);
+}
+
+.offer-form-container .form-grid .cp-vehicle-picker {
+  width: 100%;
+  min-width: 0;
+}
+
+.form-btns .post-btn,
+.form-btns .cancel-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ride-info-group {
@@ -226,36 +328,36 @@
 .arrow { color: var(--text-muted); }
 
 .post-btn {
-  background: var(--accent-teal);
-  color: var(--bg-deep);
-  border: none;
-  padding: 10px 24px;
-  border-radius: var(--radius-md);
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 15px var(--accent-glow);
-  transition: transform 0.2s;
+  border: 1px solid var(--fsf-pill-cta-border);
+  background: var(--fsf-pill-cta-bg);
+  color: var(--fsf-pill-cta-text);
+  box-shadow: var(--fsf-pill-cta-shadow);
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .post-btn:hover {
-  transform: translateY(-2px);
+  transform: scale(1.06);
+  filter: brightness(1.04);
 }
 
 .cancel-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-  border: 1px solid var(--glass-border);
-  padding: 10px 24px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid var(--fsf-pill-muted-border);
+  background: var(--fsf-pill-muted-bg);
+  color: var(--fsf-pill-muted-text);
+  box-shadow: var(--fsf-pill-muted-shadow);
+  transition: transform 0.2s ease;
 }
 
 .cancel-btn:hover {
-  background: rgba(255, 77, 77, 0.1);
-  border-color: #ff4d4d;
-  color: white;
+  transform: scale(1.06);
 }
 
 /* RideCard Footer Refinement */
@@ -293,24 +395,28 @@
 .report-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  color: var(--text-muted);
+  color: #ef4444;
   font-size: 11px;
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 4px;
   cursor: pointer;
   align-self: center;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
   width: fit-content;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
+[data-theme='light'] .report-btn {
+  background: #ffffff;
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+}
+
 .report-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: #ef4444;
+  transform: scale(1.06);
 }
 
 /* Hide Spin Buttons (Arrows) in Number Inputs */
