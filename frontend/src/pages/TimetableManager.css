@@ -1,0 +1,154 @@
+.timetable-page.custom-theme {
+  background-color: #121212;
+  min-height: 100vh;
+  padding: 3rem;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.timetable-header h2 {
+  color: #FFC107;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+}
+
+.custom-selectors {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.select-group label {
+  color: #FFC107;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+.select-group select {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #FFC107;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+
+.select-group select:focus {
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
+}
+
+.get-timetable-btn {
+  background-color: #FFC107;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-bottom: 4rem;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.get-timetable-btn:hover {
+  background-color: #ffca2c;
+  transform: translateY(-2px);
+}
+
+.get-timetable-btn:active {
+  transform: translateY(0);
+}
+
+.custom-table-container {
+  border: 1px solid #FFC107;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.custom-timetable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.custom-timetable th, .custom-timetable td {
+  padding: 1.5rem 2rem;
+  text-align: left;
+}
+
+.custom-timetable thead {
+  border-bottom: 2px solid #FFC107;
+}
+
+.custom-timetable th {
+  color: #FFC107;
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.custom-timetable tbody tr {
+  border-bottom: 1px solid #333333;
+}
+
+.custom-timetable tbody tr:last-child {
+  border-bottom: none;
+}
+
+.custom-timetable td {
+  color: #e0e0e0;
+  font-size: 1.1rem;
+}
+
+.admin-upload-section {
+  background: rgba(255, 193, 7, 0.05);
+  border: 1px dashed #FFC107;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+}
+
+.admin-upload-section h3 {
+  color: #FFC107;
+  margin-top: 0;
+}
+
+.upload-inputs input {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.help-text {
+  color: #888;
+  margin-top: 1rem;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+  .custom-selectors {
+    flex-direction: column;
+  }
+  .select-group {
+    width: 100%;
+  }
+}

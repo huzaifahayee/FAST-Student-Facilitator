@@ -1,0 +1,325 @@
+/* 
+  Carpool.css
+*/
+
+.carpool-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.carpool-header h2 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.carpool-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.carpool-actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.primary-btn {
+  background: var(--accent-teal);
+  color: var(--bg-deep);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.primary-btn:hover {
+  transform: scale(1.05);
+}
+
+.secondary-btn {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rides-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.empty-state {
+  padding: 80px;
+  text-align: center;
+  border-style: dashed;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.empty-state .subtext {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.offer-form-container {
+  padding: 32px;
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--accent-teal);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-grid input {
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.checkpoint-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.cp-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cp-input input {
+  flex: 1;
+  padding: 8px;
+  background: var(--bg-deep);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.cp-tag {
+  display: inline-block;
+  background: var(--accent-glow);
+  color: var(--accent-teal);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  margin-right: 8px;
+  border: 1px solid var(--accent-teal);
+}
+
+/* Form Header & Error Feedback */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-text {
+  color: #ff4d4d;
+  font-size: 13px;
+  background: rgba(255, 77, 77, 0.1);
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+/* Select Menu Styling */
+.form-select {
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.form-select option {
+  background: #0a0b10; /* Solid dark background for visibility */
+  color: white;
+}
+
+/* Button Refinement */
+.add-btn {
+  background: transparent;
+  color: var(--accent-teal);
+  border: 1px solid var(--accent-teal);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: var(--accent-glow);
+  box-shadow: 0 0 10px var(--accent-teal);
+}
+
+.form-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.ride-info-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.status-badge.approved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  animation: pending-pulse 2s infinite ease-in-out;
+}
+
+@keyframes pending-pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.origin { color: var(--text-primary); }
+.dest { color: var(--accent-teal); }
+.checkpoint { 
+  color: var(--text-secondary); 
+  font-size: 15px;
+  font-weight: 500;
+}
+.arrow { color: var(--text-muted); }
+
+.post-btn {
+  background: var(--accent-teal);
+  color: var(--bg-deep);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px var(--accent-glow);
+  transition: transform 0.2s;
+}
+
+.post-btn:hover {
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 77, 77, 0.1);
+  border-color: #ff4d4d;
+  color: white;
+}
+
+/* RideCard Footer Refinement */
+.ride-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--spacing-sm);
+}
+
+.offerer-info, .contact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.driver-label, .contact-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.driver-name, .contact-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.driver-name {
+  color: var(--accent-teal);
+}
+
+.report-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: center;
+  transition: all 0.2s ease;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.report-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Hide Spin Buttons (Arrows) in Number Inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}

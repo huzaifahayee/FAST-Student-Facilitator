@@ -1,0 +1,28 @@
+/* 
+  App.css
+  
+  What is this file?
+  This file handles the high-level layout of the application shell.
+  We use 'flexbox' to divide the screen into a sidebar and a main section.
+*/
+
+.app-shell {
+  display: flex;
+  height: 100vh; /* Takes full height of the browser window */
+  width: 100vw;  /* Takes full width of the browser window */
+  background: var(--bg-gradient);
+  overflow: hidden; /* Prevents the main shell from having scrollbars */
+}
+
+.main-viewport {
+  flex: 1; /* Takes up all remaining space next to the sidebar */
+  display: flex;
+  flex-direction: column; /* Stack topbar on top of the content area */
+  height: 100%;
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto; /* Allows only the content area to scroll */
+}

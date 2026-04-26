@@ -1,0 +1,77 @@
+/* 
+  FeatureCarousel.css
+  
+  What is this file?
+  Handles the horizontal swipe logic for the feature section.
+  We use 'CSS Scroll Snap' to make the swiping feel professional 
+  on touchpads and mobile devices.
+*/
+
+.carousel-view {
+  width: 100%;
+  overflow: hidden; /* Hide the scrollbar if we want a cleaner look */
+  padding: 10px 0;
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto; /* Enables horizontal scroll */
+  padding-bottom: 20px;
+  
+  /* Modern Scroll Snapping:
+     This makes the carousel 'snap' to the start of each card
+     as the user swipes, preventing cards from getting stuck halfway.
+  */
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Hides scrollbar on Firefox */
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none; /* Hides scrollbar on Chrome/Safari */
+}
+
+.feature-card-wrapper {
+  /* 
+    Logic for 3 cards:
+    We want 3 cards to fit perfectly on screen.
+    With flex gaps, we use calc() to subtract the gaps from the total width.
+  */
+  flex: 0 0 calc((100% - (var(--spacing-md) * 2)) / 3); 
+  scroll-snap-align: start; /* Snap point */
+  text-decoration: none;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 200px;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-teal);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.card-number {
+  font-size: 10px;
+  color: var(--accent-teal);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.feature-card h4 {
+  font-size: 20px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.feature-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
