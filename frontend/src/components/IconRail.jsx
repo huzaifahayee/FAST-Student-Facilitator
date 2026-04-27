@@ -29,7 +29,7 @@ const navItems = [
     { to: '/past-papers', label: 'Past Papers',   Icon: FileText },
     { to: '/events',      label: 'Events',        Icon: Calendar },
     { to: '/reminders',   label: 'Reminders',     Icon: Bell },
-    { to: '/map',         label: 'Map Guide',     Icon: Map },
+    { to: '/campus-map',  label: 'Map Guide',     Icon: Map },
     { to: '/timetable',   label: 'Timetable',     Icon: Clock },
     { to: '/marketplace', label: 'Book Exchange', Icon: BookOpen },
     { to: '/notes',       label: 'FastNotes',     Icon: StickyNote },

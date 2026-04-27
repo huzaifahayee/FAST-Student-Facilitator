@@ -17,6 +17,7 @@ import CampusEventBoard from './pages/CampusEventBoard';
 import PopReminders from './pages/PopReminders';
 import ReminderLoginPopup from './components/ReminderLoginPopup';
 import ReminderNotifier from './components/ReminderNotifier';
+import CampusMap from './pages/CampusMap';
 import './App.css';
 
 /**
@@ -96,7 +97,7 @@ function App() {
                         <Route path="/past-papers" element={<PastPapers user={user} />} />
                         <Route path="/events" element={<CampusEventBoard user={user} />} />
                         <Route path="/reminders" element={<PopReminders user={user} />} />
-                        <Route path="/map" element={<ServiceSkeleton featureName="Campus Map" />} />
+                        <Route path="/campus-map" element={<CampusMap user={user} />} />
                         <Route path="/timetable" element={<TimetableManager user={user} />} />
                         <Route path="/marketplace" element={<BookExchange user={user} />} />
                         <Route path="/notes" element={<FastNotes user={user} />} />

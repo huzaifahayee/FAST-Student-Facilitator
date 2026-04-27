@@ -39,7 +39,7 @@ export default function PastPapers({ user }) {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [formData, setFormData] = useState({
     courseName: '', courseCode: '', semesterYear: '', examType: 'MIDTERM',
-    instructorName: '', googleDriveLink: ''
+    googleDriveLink: ''
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -96,7 +96,6 @@ export default function PastPapers({ user }) {
     if (!formData.courseName.trim()) errors.courseName = "Course name is required";
     if (!formData.courseCode.trim()) errors.courseCode = "Course code is required";
     if (!formData.semesterYear.trim()) errors.semesterYear = "Semester/Year is required";
-    if (!formData.instructorName.trim()) errors.instructorName = "Instructor name is required";
     
     if (!formData.googleDriveLink.trim()) {
       errors.googleDriveLink = "Link is required";
@@ -111,6 +110,7 @@ export default function PastPapers({ user }) {
 
     const payload = {
       ...formData,
+      instructorName: 'N/A',
       ownerEmail: user.email,
       ownerName: user.name
     };
@@ -131,7 +131,7 @@ export default function PastPapers({ user }) {
       setShowUploadForm(false);
       setFormData({
         courseName: '', courseCode: '', semesterYear: '', examType: 'MIDTERM',
-        instructorName: '', googleDriveLink: ''
+        googleDriveLink: ''
       });
       fetchPapers(); // refresh
     })
@@ -299,11 +299,6 @@ export default function PastPapers({ user }) {
             />
           </div>
 
-          <div className="form-group">
-            <input type="text" name="instructorName" placeholder="Instructor Name" 
-              value={formData.instructorName} onChange={handleInputChange} />
-            {formErrors.instructorName && <span className="error-text">{formErrors.instructorName}</span>}
-          </div>
 
           <div className="form-group">
             <input type="text" name="googleDriveLink" placeholder="Google Drive Link (https://...)" 
@@ -403,7 +398,6 @@ export default function PastPapers({ user }) {
               </div>
               <h3 className="course-title">{paper.courseName}</h3>
               <p className="course-code">{paper.courseCode} &bull; {paper.semesterYear}</p>
-              <p className="instructor">Instructor: {paper.instructorName}</p>
               <div className="card-bot">
                 <span className="rating">⭐ {paper.averageRating} ({paper.ratingCount})</span>
                 <span className="uploader">By {paper.ownerName.split(' ')[0]}</span>
@@ -440,7 +434,7 @@ export default function PastPapers({ user }) {
             <div className="paper-detail-modal-body">
               <h2 id="paper-detail-title">{selectedPaper.courseName} ({selectedPaper.courseCode})</h2>
               <p className="metadata">
-                {selectedPaper.semesterYear} • {selectedPaper.examType} • Inst: {selectedPaper.instructorName}
+                {selectedPaper.semesterYear} • {selectedPaper.examType}
               </p>
 
               <button type="button" className="btn-primary open-drive" onClick={() => openDriveFolder(selectedPaper.id)}>

@@ -33,4 +33,9 @@ public interface CampusEventRepository extends JpaRepository<CampusEvent, Long> 
     // Used to wipe only previously-imported items on re-upload, leaving
     // user-posted semester-plan items untouched.
     List<CampusEvent> findBySemesterPlanTrueAndOrganizerIn(List<String> organizers);
+
+    // ── Campus Map integration (UC-32) ────────────────────────────────────────
+    // READ-ONLY: used by CampusMapController to surface active events at a
+    // destination.  No other campus-events file is modified.
+    List<CampusEvent> findByVenueContainingIgnoreCaseAndApprovedTrue(String venue);
 }
