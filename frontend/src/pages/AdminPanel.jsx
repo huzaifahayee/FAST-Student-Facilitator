@@ -45,19 +45,22 @@ const AdminPanel = () => {
 
   const fetchFlagged = async () => {
     try {
-      const [resRides, resPapers, resBooks] = await Promise.all([
+      const [resRides, resPapers, resBooks, resLocations] = await Promise.all([
         fetch('http://localhost:8080/api/rides/flagged'),
         fetch('http://localhost:8080/api/past-papers/flagged'),
-        fetch('http://localhost:8080/api/books/flagged')
+        fetch('http://localhost:8080/api/books/flagged'),
+        fetch('http://localhost:8080/api/campus-map/locations/flagged')
       ]);
-      if (!resRides.ok || !resPapers.ok || !resBooks.ok) throw new Error("CORS or Server Error (Flagged)");
+      if (!resRides.ok || !resPapers.ok || !resBooks.ok || !resLocations.ok) throw new Error("CORS or Server Error (Flagged)");
       const dataRides = await resRides.json();
       const dataPapers = await resPapers.json();
       const dataBooks = await resBooks.json();
+      const dataLocations = await resLocations.json();
       const mappedRides = dataRides.map(r => ({ ...r, entityType: 'Ride' }));
       const mappedPapers = dataPapers.map(p => ({ ...p, entityType: 'Paper' }));
       const mappedBooks = dataBooks.map(b => ({ ...b, entityType: 'Book' }));
-      setFlaggedItems([...mappedRides, ...mappedPapers, ...mappedBooks]);
+      const mappedLocations = dataLocations.map(l => ({ ...l, entityType: 'Location' }));
+      setFlaggedItems([...mappedRides, ...mappedPapers, ...mappedBooks, ...mappedLocations]);
     } catch (err) {
       console.error(err);
       setError("Moderation connectivity lost. Check backend.");
@@ -68,19 +71,22 @@ const AdminPanel = () => {
 
   const fetchPending = async () => {
     try {
-      const [resRides, resPapers, resBooks] = await Promise.all([
+      const [resRides, resPapers, resBooks, resLocations] = await Promise.all([
         fetch('http://localhost:8080/api/rides/pending'),
         fetch('http://localhost:8080/api/past-papers/pending'),
-        fetch('http://localhost:8080/api/books/pending')
+        fetch('http://localhost:8080/api/books/pending'),
+        fetch('http://localhost:8080/api/campus-map/locations/pending')
       ]);
-      if (!resRides.ok || !resPapers.ok || !resBooks.ok) throw new Error("Server error (Pending)");
+      if (!resRides.ok || !resPapers.ok || !resBooks.ok || !resLocations.ok) throw new Error("Server error (Pending)");
       const dataRides = await resRides.json();
       const dataPapers = await resPapers.json();
       const dataBooks = await resBooks.json();
+      const dataLocations = await resLocations.json();
       const mappedRides = dataRides.map(r => ({ ...r, entityType: 'Ride' }));
       const mappedPapers = dataPapers.map(p => ({ ...p, entityType: 'Paper' }));
       const mappedBooks = dataBooks.map(b => ({ ...b, entityType: 'Book' }));
-      setPendingItems([...mappedRides, ...mappedPapers, ...mappedBooks]);
+      const mappedLocations = dataLocations.map(l => ({ ...l, entityType: 'Location' }));
+      setPendingItems([...mappedRides, ...mappedPapers, ...mappedBooks, ...mappedLocations]);
     } catch (err) {
       setError("Failed to sync with approval queue.");
     }
@@ -110,7 +116,7 @@ const AdminPanel = () => {
 
   const handleApprove = async (id, entityType) => {
     const reason = prompt(`Optional: Add a message for the student (e.g., 'Verified')`);
-    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : 'books';
+    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
     try {
       await fetch(`http://localhost:8080/api/${endpoint}/${id}/approve?reason=${encodeURIComponent(reason || '')}`, { method: 'PUT' });
       refreshData();
@@ -121,7 +127,7 @@ const AdminPanel = () => {
 
   const handleResolve = async (id, entityType) => {
     if (!window.confirm("Clear the flag on this item and keep it live?")) return;
-    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : 'books';
+    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
     try {
       const res = await fetch(`http://localhost:8080/api/${endpoint}/${id}/resolve`, { method: 'PUT' });
       if (!res.ok) throw new Error(`Resolve failed with status ${res.status}`);
@@ -135,7 +141,7 @@ const AdminPanel = () => {
   const handleDelete = async (id, entityType) => {
     const reason = prompt("REQUIRED: Why is this content being removed?");
     if (!reason) return; // Force a reason for deletion
-    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : 'books';
+    const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
 
     if (window.confirm("CRITICAL: This will permanently delete this item. Proceed?")) {
       try {
@@ -250,6 +256,8 @@ const AdminPanel = () => {
                           ? `${item.origin} → ${item.destination}` 
                           : item.entityType === 'Paper'
                           ? `${item.courseName} (${item.courseCode})`
+                          : item.entityType === 'Location'
+                          ? `${item.locationName} (${item.category})`
                           : `${item.bookTitle} - ${item.listingType}`}
                       </td>
                       <td>
