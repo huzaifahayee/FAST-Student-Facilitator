@@ -38,6 +38,7 @@ public class SecurityConfig {
             // 3. Define which pages are public and which are private
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/api/rides/**").permitAll() // Students can view/post rides
                 .requestMatchers("/api/past-papers/**").permitAll()
