@@ -185,6 +185,7 @@ const CampusMap = ({ user }) => {
   const [suggestErrors, setSuggestErrors]     = useState({});
   const [suggestSuccess, setSuggestSuccess]   = useState(false);
   const [suggestSubmitting, setSuggestSubmitting] = useState(false);
+  const [showWholeMap, setShowWholeMap] = useState(false);
 
   // ── Admin Route Manager state ───────────────────────────────────────────────
   const [adminRoutes, setAdminRoutes] = useState([]);
@@ -193,19 +194,31 @@ const CampusMap = ({ user }) => {
   });
   const [adminRouteErrors, setAdminRouteErrors] = useState({});
   const [adminRouteSuccess, setAdminRouteSuccess] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [adminToType, setAdminToType] = useState('BLOCK'); // BLOCK, ROOM, FACULTY
+  const [newRoomInput, setNewRoomInput] = useState('');
+  const [newFacultyInput, setNewFacultyInput] = useState('');
+  const [newDescriptionInput, setNewDescriptionInput] = useState('');
 
-  const fetchAdminRoutes = useCallback(() => {
-    if (user?.role === 'ADMIN') {
-      fetch(`${API}/admin/routes/all`)
-        .then(r => r.json())
-        .then(data => setAdminRoutes(data))
-        .catch(err => console.error('Failed to fetch admin routes', err));
-    }
+  const [definedRoutes, setDefinedRoutes] = useState([]);
+
+  const fetchDefinedRoutes = useCallback(() => {
+    // Fetching all routes so we know which paths are actually set up
+    fetch(`${API}/admin/routes/all`)
+      .then(r => r.json())
+      .then(data => {
+        setDefinedRoutes(data);
+        if (user?.role === 'ADMIN') {
+          setAdminRoutes(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch defined routes', err));
   }, [user]);
 
   useEffect(() => {
-    fetchAdminRoutes();
-  }, [fetchAdminRoutes]);
+    fetchDefinedRoutes();
+  }, [fetchDefinedRoutes]);
 
   const handleAdminRouteSubmit = async (e) => {
     e.preventDefault();
@@ -222,9 +235,80 @@ const CampusMap = ({ user }) => {
       setAdminRouteErrors(errs);
       return;
     }
+
+    // ── Duplicate Check ──
+    const isDuplicate = definedRoutes.some(r => 
+      r.fromLocation === adminRouteForm.fromLocation && 
+      r.toLocation === adminRouteForm.toLocation && 
+      r.stepOrder === parseInt(adminRouteForm.stepOrder, 10)
+    );
+    if (isDuplicate) {
+      setAdminRouteErrors({ api: `A step #${adminRouteForm.stepOrder} already exists for this path.` });
+      return;
+    }
+
     setAdminRouteErrors({});
     
     try {
+      let finalImageName = adminRouteForm.imageFileName.trim() || null;
+
+      // If a file is selected, upload it first
+      if (selectedFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const uploadRes = await fetch(`${API}/admin/upload-image`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          finalImageName = uploadData.fileName;
+        } else {
+          const msg = await uploadRes.text();
+          setAdminRouteErrors({ api: `Upload failed: ${msg}` });
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
+
+      // ── Step 1: Add/Update Metadata if provided ──────────────────────────────
+      // We assume the route is being added to the PARENT block.
+      // If the admin selected a block and provided new rooms/faculty/description, we update that block.
+      const targetBlock = allLocations.find(l => l.locationName === adminRouteForm.toLocation);
+      if (targetBlock && (newRoomInput.trim() || newFacultyInput.trim() || newDescriptionInput.trim())) {
+        const updatedLoc = { ...targetBlock };
+        
+        if (newDescriptionInput.trim()) {
+          updatedLoc.description = newDescriptionInput.trim();
+        }
+
+        if (newRoomInput.trim()) {
+          const existing = updatedLoc.classroomNumbers ? updatedLoc.classroomNumbers.split(',').map(s => s.trim()) : [];
+          const newOnes = newRoomInput.split(',').map(s => s.trim()).filter(s => s && !existing.includes(s));
+          if (newOnes.length > 0) {
+            updatedLoc.classroomNumbers = [...existing, ...newOnes].join(', ');
+          }
+        }
+        if (newFacultyInput.trim()) {
+          const existing = updatedLoc.facultyOffices ? updatedLoc.facultyOffices.split(',').map(s => s.trim()) : [];
+          const newOnes = newFacultyInput.split(',').map(s => s.trim()).filter(s => s && !existing.includes(s));
+          if (newOnes.length > 0) {
+            updatedLoc.facultyOffices = [...existing, ...newOnes].join(', ');
+          }
+        }
+
+        await fetch(`${API}/locations/${targetBlock.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedLoc)
+        });
+      }
+
+      // ── Step 2: Add Route Step ──────────────────────────────────────────────
       const res = await fetch(`${API}/admin/routes/step`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,7 +316,7 @@ const CampusMap = ({ user }) => {
           fromLocation: adminRouteForm.fromLocation,
           toLocation: adminRouteForm.toLocation,
           stepOrder: parseInt(adminRouteForm.stepOrder, 10),
-          imageFileName: adminRouteForm.imageFileName.trim() || null,
+          imageFileName: finalImageName,
           stepDescription: adminRouteForm.stepDescription.trim(),
           ownerEmail: user?.email || '',
           ownerName: user?.name || ''
@@ -241,7 +325,18 @@ const CampusMap = ({ user }) => {
       if (res.ok) {
         setAdminRouteSuccess('Route step added successfully!');
         setAdminRouteForm({ fromLocation: '', toLocation: '', stepOrder: 1, imageFileName: '', stepDescription: '' });
-        fetchAdminRoutes();
+        setSelectedFile(null);
+        setNewRoomInput('');
+        setNewFacultyInput('');
+        setNewDescriptionInput('');
+        // Reset file input manually
+        const fileInput = document.getElementById('admin-route-file');
+        if (fileInput) fileInput.value = '';
+
+        fetchDefinedRoutes();
+        // Refresh locations to show new rooms/faculty in dropdowns
+        fetch(`${API}/all-locations`).then(r => r.json()).then(data => setAllLocations(data.locations || []));
+        
         setTimeout(() => setAdminRouteSuccess(''), 4000);
       } else {
         const msg = await res.text();
@@ -249,6 +344,7 @@ const CampusMap = ({ user }) => {
       }
     } catch (err) {
       setAdminRouteErrors({ api: 'Network error submitting route' });
+      setUploading(false);
     }
   };
 
@@ -257,7 +353,7 @@ const CampusMap = ({ user }) => {
     try {
       const res = await fetch(`${API}/admin/routes/step/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        fetchAdminRoutes();
+        fetchDefinedRoutes();
       } else {
         alert('Failed to delete route step');
       }
@@ -284,23 +380,54 @@ const CampusMap = ({ user }) => {
 
   const destinationOptions = React.useMemo(() => {
     if (!searchType) return [];
-    if (searchType === 'BLOCK') return allLocations.filter(l => l.locationType === 'BLOCK');
-    if (searchType === 'FACULTY_OFFICE') return allLocations.filter(l => l.locationType === 'FACULTY_OFFICE');
-    if (searchType === 'ROOM') {
-      // Flatten classroomNumbers from all blocks into individual room options
-      const rooms = [];
+
+    // ── Student Filtering Logic ──
+    // If not admin, only show destinations that have a defined route from 'fromLocation'
+    const isAdmin = user?.role === 'ADMIN';
+    const filterByRoute = (locName) => {
+      if (isAdmin) return true; // Admins see everything
+      if (!fromLocation) return false; // Don't show any destinations until starting point is selected
+      
+      // Check if any route exists: From -> To (case-insensitive)
+      return definedRoutes.some(r => 
+        r.fromLocation.toLowerCase() === fromLocation.toLowerCase() && 
+        r.toLocation.toLowerCase() === locName.toLowerCase()
+      );
+    };
+
+    if (searchType === 'BLOCK') {
+      return allLocations
+        .filter(l => l.locationType === 'BLOCK')
+        .filter(l => filterByRoute(l.locationName));
+    }
+    
+    if (searchType === 'FACULTY_OFFICE') {
+      const faculties = [];
       allLocations.forEach(loc => {
-        if (loc.classroomNumbers) {
-          loc.classroomNumbers.split(',').forEach(room => {
-            const r = room.trim();
-            if (r) rooms.push({ room: r, block: loc.locationName, blockId: loc.blockId });
+        if (loc.facultyOffices && filterByRoute(loc.locationName)) {
+          loc.facultyOffices.split(',').forEach(fac => {
+            const f = fac.trim();
+            if (f) faculties.push({ name: f, block: loc.locationName, blockId: loc.blockId });
           });
         }
       });
-      return rooms;
+      return faculties.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (searchType === 'ROOM') {
+      const rooms = [];
+      allLocations.forEach(loc => {
+        if (loc.classroomNumbers && filterByRoute(loc.locationName)) {
+          loc.classroomNumbers.split(',').forEach(room => {
+            const r = room.trim();
+            if (r) rooms.push({ name: r, block: loc.locationName, blockId: loc.blockId });
+          });
+        }
+      });
+      return rooms.sort((a, b) => a.name.localeCompare(b.name));
     }
     return [];
-  }, [searchType, allLocations]);
+  }, [searchType, allLocations, definedRoutes, fromLocation, user]);
 
   // ── Direction Finder handlers ───────────────────────────────────────────────
   const handleSearchTypeChange = (e) => {
@@ -515,6 +642,16 @@ const CampusMap = ({ user }) => {
         )}
       </div>
 
+      <div className="whole-map-trigger-container">
+        <button 
+          id="whole-campus-map-btn"
+          className="whole-map-btn"
+          onClick={() => setShowWholeMap(true)}
+        >
+          🗺️ Whole Campus Map
+        </button>
+      </div>
+
       {/* ════════════════════════════════════════════════════════════════════
           SECTION 1 — DIRECTION FINDER  (UC-32)
       ═══════════════════════════════════════════════════════════════════ */}
@@ -525,8 +662,8 @@ const CampusMap = ({ user }) => {
         </div>
 
         <div className="map-section-body">
-          {/* Step 1 — What are you looking for? */}
           <div className="direction-finder-grid">
+            {/* Step 1 — What are you looking for? */}
             <div className="map-field-group">
               <label className="map-field-label" htmlFor="search-type-select">
                 What are you looking for?
@@ -544,39 +681,7 @@ const CampusMap = ({ user }) => {
               </select>
             </div>
 
-            {/* Step 2 — Select Destination (only after type chosen) */}
-            <div className="map-field-group">
-              <label className="map-field-label" htmlFor="to-location-select">
-                Select Destination
-              </label>
-              <select
-                id="to-location-select"
-                className="map-select"
-                value={toLocation}
-                onChange={handleToChange}
-                disabled={!searchType}
-              >
-                <option value="">
-                  {searchType ? 'Choose destination…' : 'Select type first'}
-                </option>
-                {searchType === 'BLOCK' && destinationOptions.map((loc, i) => (
-                  <option key={i} value={loc.locationName}>{loc.locationName}</option>
-                ))}
-                {searchType === 'FACULTY_OFFICE' && destinationOptions.map((loc, i) => (
-                  <option key={i} value={loc.locationName}>
-                    {loc.locationName}{loc.blockId ? ` (${loc.blockId})` : ''}
-                  </option>
-                ))}
-                {searchType === 'ROOM' && destinationOptions.map((opt, i) => (
-                  <option key={i} value={opt.room}>
-                    {opt.room} — {opt.block}
-                  </option>
-                ))}
-              </select>
-              {validationErrors.to && <span className="map-field-error">{validationErrors.to}</span>}
-            </div>
-
-            {/* Step 3 — Where are you now? */}
+            {/* Step 2 — Where are you now? */}
             <div className="map-field-group">
               <label className="map-field-label" htmlFor="from-location-select">
                 Where are you now?
@@ -586,16 +691,46 @@ const CampusMap = ({ user }) => {
                 className="map-select"
                 value={fromLocation}
                 onChange={handleFromChange}
-                disabled={!toLocation}
+                disabled={!searchType}
               >
-                <option value="">
-                  {toLocation ? 'Your current location…' : 'Select destination first'}
-                </option>
+                <option value="">{searchType ? 'Choose your starting point…' : 'Select what you seek first'}</option>
                 {blockOptions.map((loc, i) => (
                   <option key={i} value={loc.locationName}>{loc.locationName}</option>
                 ))}
               </select>
               {validationErrors.from && <span className="map-field-error">{validationErrors.from}</span>}
+            </div>
+
+            {/* Step 3 — Select Destination */}
+            <div className="map-field-group">
+              <label className="map-field-label" htmlFor="to-location-select">
+                Select Destination
+              </label>
+              <select
+                id="to-location-select"
+                className="map-select"
+                value={toLocation}
+                onChange={handleToChange}
+                disabled={!fromLocation}
+              >
+                <option value="">
+                  {fromLocation ? 'Choose destination…' : 'Select starting point first'}
+                </option>
+                {searchType === 'BLOCK' && destinationOptions.map((loc, i) => (
+                  <option key={i} value={loc.locationName}>{loc.locationName}</option>
+                ))}
+                {searchType === 'FACULTY_OFFICE' && destinationOptions.map((opt, i) => (
+                  <option key={i} value={opt.name}>
+                    {opt.name} — {opt.block}
+                  </option>
+                ))}
+                {searchType === 'ROOM' && destinationOptions.map((opt, i) => (
+                  <option key={i} value={opt.name}>
+                    {opt.name} — {opt.block}
+                  </option>
+                ))}
+              </select>
+              {validationErrors.to && <span className="map-field-error">{validationErrors.to}</span>}
             </div>
           </div>
 
@@ -978,15 +1113,28 @@ const CampusMap = ({ user }) => {
                 </div>
 
                 <div className="map-field-group">
-                  <label className="map-field-label">To Location</label>
+                  <label className="map-field-label">Destination Category</label>
+                  <select
+                    className="map-select"
+                    value={adminToType}
+                    onChange={e => setAdminToType(e.target.value)}
+                  >
+                    <option value="BLOCK">Block / Building</option>
+                    <option value="ROOM">Classroom / Lab</option>
+                    <option value="FACULTY">Faculty Office</option>
+                  </select>
+                </div>
+
+                <div className="map-field-group">
+                  <label className="map-field-label">Target Block (Route Endpoint)</label>
                   <select
                     className={`map-select${adminRouteErrors.toLocation ? ' error' : ''}`}
                     value={adminRouteForm.toLocation}
                     onChange={e => setAdminRouteForm(f => ({ ...f, toLocation: e.target.value }))}
                   >
-                    <option value="">Select To…</option>
-                    {allLocations.filter(loc => loc.locationType === 'BLOCK' || loc.locationType === 'FACULTY_OFFICE').map((loc, i) => (
-                      <option key={i} value={loc.locationName}>{loc.locationName} {loc.blockId ? `(${loc.blockId})` : ''}</option>
+                    <option value="">Select Target Block…</option>
+                    {blockOptions.map((loc, i) => (
+                      <option key={i} value={loc.locationName}>{loc.locationName} ({loc.blockId})</option>
                     ))}
                   </select>
                   {adminRouteErrors.toLocation && <span className="field-error-text">{adminRouteErrors.toLocation}</span>}
@@ -1006,13 +1154,49 @@ const CampusMap = ({ user }) => {
                 </div>
 
                 <div className="map-field-group">
-                  <label className="map-field-label">Image Filename (Optional)</label>
+                  <label className="map-field-label">Or Upload Photo</label>
+                  <input
+                    id="admin-route-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setSelectedFile(e.target.files[0])}
+                    className="map-select"
+                    style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '0.65rem 1rem', borderRadius: '12px' }}
+                  />
+                </div>
+
+                <div className="map-field-group">
+                  <label className="map-field-label">Update Description (Optional)</label>
                   <input
                     type="text"
-                    placeholder="e.g. step1.jpg"
+                    placeholder="e.g. Near the main entrance..."
                     className="map-select"
-                    value={adminRouteForm.imageFileName}
-                    onChange={e => setAdminRouteForm(f => ({ ...f, imageFileName: e.target.value }))}
+                    value={newDescriptionInput}
+                    onChange={e => setNewDescriptionInput(e.target.value)}
+                    style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '0.65rem 1rem', borderRadius: '12px' }}
+                  />
+                </div>
+
+                <div className="map-field-group">
+                  <label className="map-field-label">Add Classrooms (Optional, comma separated)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. C-15, Lab-4"
+                    className="map-select"
+                    value={newRoomInput}
+                    onChange={e => setNewRoomInput(e.target.value)}
+                    style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '0.65rem 1rem', borderRadius: '12px' }}
+                  />
+                </div>
+
+                <div className="map-field-group">
+                  <label className="map-field-label">Add Faculty Names (Optional, comma separated)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. Salman (CS)"
+                    className="map-select"
+                    value={newFacultyInput}
+                    onChange={e => setNewFacultyInput(e.target.value)}
                     style={{ backgroundColor: 'var(--bg-card-hover)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '0.65rem 1rem', borderRadius: '12px' }}
                   />
                 </div>
@@ -1030,11 +1214,11 @@ const CampusMap = ({ user }) => {
                 {adminRouteErrors.stepDescription && <span className="field-error-text">{adminRouteErrors.stepDescription}</span>}
               </div>
 
-              {adminRouteErrors.api && <span className="field-error-text">{adminRouteErrors.api}</span>}
+              {adminRouteErrors.api && <div className="field-error-text" style={{ color: 'var(--accent-magenta)', marginBottom: '0.5rem', fontWeight: 'bold' }}>{adminRouteErrors.api}</div>}
 
               <div style={{ marginTop: '1rem' }}>
-                <button type="submit" className="get-directions-btn" style={{ padding: '0.6rem 1.5rem', background: 'var(--accent-magenta)' }}>
-                  + Add Route Step
+                <button type="submit" className="get-directions-btn" disabled={uploading} style={{ padding: '0.6rem 1.5rem', background: 'var(--accent-magenta)' }}>
+                  {uploading ? 'Uploading Image...' : '+ Add Route Step'}
                 </button>
               </div>
             </form>
@@ -1077,6 +1261,28 @@ const CampusMap = ({ user }) => {
           </div>
         </div>
       )}
+      {/* ── Whole Campus Map Modal ────────────────────────────────────── */}
+      {showWholeMap && (
+        <div className="whole-map-overlay" onClick={() => setShowWholeMap(false)} role="dialog" aria-modal="true">
+          <div className="whole-map-modal" onClick={e => e.stopPropagation()}>
+            <div className="whole-map-header">
+              <h3>FAST Lahore - Complete Campus Map</h3>
+              <button className="whole-map-close" onClick={() => setShowWholeMap(false)} aria-label="Close modal">×</button>
+            </div>
+            <div className="whole-map-body">
+              <img 
+                src="http://localhost:8080/api/campus-map/images/whole_campus_map.jpg" 
+                alt="Whole Campus Map" 
+                className="whole-map-img"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/1200x800?text=Campus+Map+Image+Not+Found+in+Backend';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

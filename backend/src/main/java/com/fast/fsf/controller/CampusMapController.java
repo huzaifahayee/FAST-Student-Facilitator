@@ -16,9 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -610,6 +615,72 @@ public class CampusMapController {
         return ResponseEntity.ok(saved);
     }
 
+    /**
+     * PUT /api/campus-map/locations/{id}
+     * Admin/owner updates an existing location.
+     */
+    @PutMapping("/locations/{id}")
+    public ResponseEntity<?> updateLocation(@PathVariable Long id, @RequestBody CampusLocation updated) {
+        return locationRepo.findById(id).map(loc -> {
+            if (updated.getLocationName() != null) loc.setLocationName(updated.getLocationName());
+            if (updated.getLocationType() != null) loc.setLocationType(updated.getLocationType());
+            if (updated.getCategory() != null) loc.setCategory(updated.getCategory());
+            if (updated.getDescription() != null) loc.setDescription(updated.getDescription());
+            if (updated.getFacultyOffices() != null) loc.setFacultyOffices(updated.getFacultyOffices());
+            if (updated.getClassroomNumbers() != null) loc.setClassroomNumbers(updated.getClassroomNumbers());
+            if (updated.getBlockId() != null) loc.setBlockId(updated.getBlockId());
+            
+            CampusLocation saved = locationRepo.save(loc);
+            activityLogRepo.save(new ActivityLog("Location #" + id + " updated", "LOCATION_UPDATED"));
+            return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IMAGE UPLOAD (ADMIN ONLY)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * POST /api/campus-map/admin/upload-image
+     * Uploads a direction image to the static resources folder.
+     */
+    @PostMapping("/admin/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        try {
+            // Target directory: src/main/resources/static/campus-map-images/
+            // Note: During local development, this writes to the source folder so you can commit to Git.
+            String uploadDir = "src/main/resources/static/campus-map-images/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            String fileName = file.getOriginalFilename();
+            // Sanitize filename: replace spaces with underscores, remove weird characters
+            if (fileName != null) {
+                fileName = fileName.replaceAll("\\s+", "_").replaceAll("[^a-zA-Z0-9._-]", "");
+            } else {
+                fileName = "upload_" + System.currentTimeMillis() + ".jpg";
+            }
+
+            Path path = Paths.get(uploadDir + fileName);
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+            activityLogRepo.save(new ActivityLog(
+                    "Image uploaded to campus map: " + fileName,
+                    "MAP_IMAGE_UPLOADED"));
+
+            return ResponseEntity.ok(Map.of("fileName", fileName));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Could not save image: " + e.getMessage());
+        }
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // ROUTE ADMIN ENDPOINTS
     // ──────────────────────────────────────────────────────────────────────────
@@ -620,6 +691,16 @@ public class CampusMapController {
      */
     @PostMapping("/admin/routes/step")
     public ResponseEntity<?> addRouteStep(@RequestBody CampusMapRoute route) {
+        // ── Duplicate Check ──
+        List<CampusMapRoute> existing = routeRepo.findByFromLocationAndToLocation(
+                route.getFromLocation(), route.getToLocation());
+        boolean isDuplicate = existing.stream()
+                .anyMatch(r -> r.getStepOrder() == route.getStepOrder());
+        if (isDuplicate) {
+            return ResponseEntity.badRequest()
+                    .body("Step #" + route.getStepOrder() + " already exists for this route.");
+        }
+
         if (route.getFromLocation() == null || route.getFromLocation().isBlank()) {
             return ResponseEntity.badRequest().body("From location is required");
         }
