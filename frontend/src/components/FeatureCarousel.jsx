@@ -53,7 +53,7 @@ const FeatureCarousel = () => {
     { name: 'Past Papers', desc: 'Prepare for exams with previous papers.', path: '/past-papers' },
     { name: 'Events', desc: 'Latest campus activities & semester plan.', path: '/events' },
     { name: 'Reminders', desc: 'Never miss a quiz or assignment alert.', path: '/reminders' },
-    { name: 'Map Guide', desc: 'Interactive campus map & room finder.', path: '/map' },
+    { name: 'Map Guide', desc: 'Interactive campus map & room finder.', path: '/campus-map' },
     { name: 'Timetable', desc: 'View your weekly class schedule.', path: '/timetable' },
     { name: 'Book Exchange', desc: 'Buy/Sell used books with students.', path: '/marketplace' },
     { name: 'FastNotes', desc: 'Student-curated PDF study notes.', path: '/notes' }

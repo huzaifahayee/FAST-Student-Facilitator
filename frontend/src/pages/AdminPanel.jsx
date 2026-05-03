@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './AdminPanel.css';
 
 /**
@@ -7,6 +8,7 @@ import './AdminPanel.css';
  * Enhanced with User Management and Hard Deletion.
  */
 const AdminPanel = () => {
+  const { showConfirm, showPrompt } = useFsfDialog();
   const [flaggedItems, setFlaggedItems] = useState([]);
   const [pendingItems, setPendingItems] = useState([]);
   const [users, setUsers] = useState([]);
@@ -115,7 +117,15 @@ const AdminPanel = () => {
   };
 
   const handleApprove = async (id, entityType) => {
-    const reason = prompt(`Optional: Add a message for the student (e.g., 'Verified')`);
+    const reasonRaw = await showPrompt({
+      title: 'Approve listing',
+      message: "Optional: add a message for the student (e.g. 'Verified').",
+      placeholder: 'Message (optional)',
+      required: false,
+      confirmText: 'Approve',
+      cancelText: 'Cancel',
+    });
+    const reason = reasonRaw ?? '';
     const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
     try {
       await fetch(`http://localhost:8080/api/${endpoint}/${id}/approve?reason=${encodeURIComponent(reason || '')}`, { method: 'PUT' });
@@ -126,7 +136,13 @@ const AdminPanel = () => {
   };
 
   const handleResolve = async (id, entityType) => {
-    if (!window.confirm("Clear the flag on this item and keep it live?")) return;
+    const ok = await showConfirm({
+      title: 'Clear flag',
+      message: 'Clear the flag on this item and keep it live?',
+      confirmText: 'Clear flag',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
     const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
     try {
       const res = await fetch(`http://localhost:8080/api/${endpoint}/${id}/resolve`, { method: 'PUT' });
@@ -139,28 +155,47 @@ const AdminPanel = () => {
   };
 
   const handleDelete = async (id, entityType) => {
-    const reason = prompt("REQUIRED: Why is this content being removed?");
-    if (!reason) return; // Force a reason for deletion
+    const reason = await showPrompt({
+      title: 'Deletion reason',
+      message: 'Why is this content being removed?',
+      placeholder: 'Reason (required)',
+      required: true,
+      confirmText: 'Continue',
+      cancelText: 'Cancel',
+    });
+    if (reason == null || !reason.trim()) return;
     const endpoint = entityType === 'Ride' ? 'rides' : entityType === 'Paper' ? 'past-papers' : entityType === 'Location' ? 'campus-map/locations' : 'books';
 
-    if (window.confirm("CRITICAL: This will permanently delete this item. Proceed?")) {
-      try {
-        await fetch(`http://localhost:8080/api/${endpoint}/${id}?reason=${encodeURIComponent(reason)}`, { method: 'DELETE' });
-        refreshData();
-      } catch (err) {
-        console.error("Delete failed", err);
-      }
+    const proceed = await showConfirm({
+      title: 'Permanent deletion',
+      message: 'CRITICAL: This will permanently delete this item. Proceed?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!proceed) return;
+    try {
+      await fetch(`http://localhost:8080/api/${endpoint}/${id}?reason=${encodeURIComponent(reason.trim())}`, { method: 'DELETE' });
+      refreshData();
+    } catch (err) {
+      console.error("Delete failed", err);
     }
   };
 
   const handleToggleBan = async (id, name) => {
-    if (window.confirm(`Are you sure you want to change access status for ${name}?`)) {
-      try {
-        await fetch(`http://localhost:8080/api/users/${id}/ban`, { method: 'PUT' });
-        refreshData();
-      } catch (err) {
-        console.error("Ban toggle failed", err);
-      }
+    const ok = await showConfirm({
+      title: 'Change access',
+      message: `Are you sure you want to change access status for ${name}?`,
+      confirmText: 'Continue',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await fetch(`http://localhost:8080/api/users/${id}/ban`, { method: 'PUT' });
+      refreshData();
+    } catch (err) {
+      console.error("Ban toggle failed", err);
     }
   };
 

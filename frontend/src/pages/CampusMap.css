@@ -310,6 +310,19 @@
   background: var(--accent-gradient);
 }
 
+/* Admin route manager — match global pill CTAs */
+.admin-routes-panel .admin-route-delete-btn.secondary-btn {
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+[data-theme='light'] .admin-routes-panel .admin-route-delete-btn.secondary-btn {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
 .same-location-msg {
   font-size: 0.88rem;
   color: var(--text-on-card-secondary);

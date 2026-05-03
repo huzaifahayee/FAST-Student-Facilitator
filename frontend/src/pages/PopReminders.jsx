@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './PopReminders.css';
 
 /**
@@ -24,6 +25,7 @@ const CATEGORIES = [
 const emptyForm = { title: '', reminderTime: '', category: 'ASSIGNMENT' };
 
 const PopReminders = ({ user }) => {
+    const { showConfirm } = useFsfDialog();
     const [reminders, setReminders] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
@@ -132,7 +134,14 @@ const PopReminders = ({ user }) => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this reminder permanently?')) return;
+        const ok = await showConfirm({
+            title: 'Delete reminder',
+            message: 'Delete this reminder permanently?',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            danger: true,
+        });
+        if (!ok) return;
         try {
             const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
             if (res.ok) loadReminders();

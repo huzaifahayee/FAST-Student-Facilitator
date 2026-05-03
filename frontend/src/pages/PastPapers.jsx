@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './PastPapers.css';
 import '../styles/IosMenuPicker.css';
 
@@ -30,6 +32,9 @@ const GOOGLE_DRIVE_LINKS = {
 };
 
 export default function PastPapers({ user }) {
+  const { showAlert } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [papers, setPapers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterExam, setFilterExam] = useState('ALL');
@@ -49,10 +54,61 @@ export default function PastPapers({ user }) {
   const [reportReason, setReportReason] = useState('');
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportError, setReportError] = useState('');
-  
+
+  const fetchPapers = () => {
+    const url = searchQuery.trim()
+      ? `http://localhost:8080/api/past-papers/search?query=${encodeURIComponent(searchQuery)}`
+      : `http://localhost:8080/api/past-papers`;
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        setPapers(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => console.error('Error fetching papers: ', err));
+  };
+
   useEffect(() => {
     fetchPapers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload list when query changes
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (searchParams.get('paper')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setSearchQuery((prev) => (q !== prev ? q : prev));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('paper');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+
+    fetch(`http://localhost:8080/api/past-papers/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Paper not found');
+        return res.json();
+      })
+      .then((data) => {
+        setSelectedPaper(data.paper);
+        setComments(data.comments || []);
+      })
+      .catch((err) =>
+        void showAlert({
+          title: 'Could not open paper',
+          message: String(err?.message || err),
+        })
+      )
+      .finally(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete('paper');
+        const qs = next.toString();
+        navigate(`/past-papers${qs ? `?${qs}` : ''}`, { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- showAlert stable from dialog provider
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     if (!examMenuOpen) return;
@@ -71,19 +127,6 @@ export default function PastPapers({ user }) {
       document.removeEventListener('keydown', onKey);
     };
   }, [examMenuOpen]);
-
-  const fetchPapers = () => {
-    const url = searchQuery.trim() 
-      ? `http://localhost:8080/api/past-papers/search?query=${encodeURIComponent(searchQuery)}`
-      : `http://localhost:8080/api/past-papers`;
-      
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        setPapers(Array.isArray(data) ? data : []);
-      })
-      .catch(err => console.error("Error fetching papers: ", err));
-  };
 
   const handleInputChange = (e) => {
     setFormData({...formData, [e.target.name]: e.target.value});
@@ -135,8 +178,8 @@ export default function PastPapers({ user }) {
       });
       fetchPapers(); // refresh
     })
-    .catch(err => {
-      alert("Error: " + err.message);
+    .catch((err) => {
+      void showAlert({ title: 'Upload failed', message: 'Error: ' + err.message });
     });
   };
 
@@ -150,7 +193,12 @@ export default function PastPapers({ user }) {
         setSelectedPaper(data.paper);
         setComments(data.comments || []);
       })
-      .catch(err => alert("Could not fetch details: " + err));
+      .catch((err) =>
+        void showAlert({
+          title: 'Could not load paper',
+          message: 'Could not fetch details: ' + err,
+        })
+      );
   };
 
   const openDriveFolder = (paperId) => {
@@ -162,7 +210,9 @@ export default function PastPapers({ user }) {
       .then(data => {
          window.open(data.googleDriveLink, '_blank');
       })
-      .catch(err => alert("Error: " + err.message));
+      .catch((err) =>
+        void showAlert({ title: 'Error', message: 'Error: ' + err.message })
+      );
   };
 
   const ratePaper = (rating) => {
@@ -180,12 +230,12 @@ export default function PastPapers({ user }) {
       setSelectedPaper(data);
       setPapers(papers.map(p => p.id === data.id ? data : p));
     })
-    .catch(err => alert(err.message));
+    .catch((err) => void showAlert({ title: 'Rating failed', message: err.message }));
   };
 
   const postComment = () => {
-    if(!newComment.trim()) {
-      alert("Comment cannot be empty"); 
+    if (!newComment.trim()) {
+      void showAlert({ title: 'Comment', message: 'Comment cannot be empty.' });
       return;
     }
     fetch(`http://localhost:8080/api/past-papers/${selectedPaper.id}/comments`, {
@@ -201,12 +251,17 @@ export default function PastPapers({ user }) {
       setComments([...comments, data]);
       setNewComment('');
     })
-    .catch(err => alert(err.message));
+    .catch((err) =>
+      void showAlert({ title: 'Comment failed', message: err.message })
+    );
   };
 
   const deleteComment = (commentId, ownerEmail) => {
-    if(ownerEmail !== user.email) {
-      alert("You can only delete your own comments");
+    if (ownerEmail !== user.email) {
+      void showAlert({
+        title: 'Cannot delete',
+        message: 'You can only delete your own comments.',
+      });
       return;
     }
     fetch(`http://localhost:8080/api/past-papers/comments/${commentId}?studentEmail=${encodeURIComponent(user.email)}`, {
@@ -217,7 +272,7 @@ export default function PastPapers({ user }) {
         throw new Error("Failed to delete comment");
       }
       setComments(comments.filter(c => c.id !== commentId));
-    }).catch(err => alert(err.message));
+    }).catch((err) => void showAlert({ title: 'Error', message: err.message }));
   };
 
   const reportPaper = () => {
@@ -245,7 +300,7 @@ export default function PastPapers({ user }) {
       const updated = {...selectedPaper, flagged: true};
       setSelectedPaper(updated);
       setPapers(papers.map(p => p.id === updated.id ? updated : p));
-      alert("Report submitted.");
+      void showAlert({ title: 'Report submitted', message: 'Report submitted.' });
     })
     .catch(err => setReportError(err.message));
   };

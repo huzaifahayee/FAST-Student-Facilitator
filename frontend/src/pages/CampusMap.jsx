@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './CampusMap.css';
 
 const API = 'http://localhost:8080/api/campus-map';
@@ -150,6 +152,11 @@ function LocationDetailPanel({ location, onClose, onGoHere }) {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 const CampusMap = ({ user }) => {
+  const { showAlert, showConfirm } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const mapSearchDeepLink = searchParams.get('q');
+
   // ── Refs ────────────────────────────────────────────────────────────────────
   const directionTopRef = useRef(null);
   const categoryBrowserRef = useRef(null);
@@ -186,6 +193,41 @@ const CampusMap = ({ user }) => {
   const [suggestSuccess, setSuggestSuccess]   = useState(false);
   const [suggestSubmitting, setSuggestSubmitting] = useState(false);
   const [showWholeMap, setShowWholeMap] = useState(false);
+
+  useEffect(() => {
+    if (!mapSearchDeepLink?.trim()) return;
+
+    let cancelled = false;
+    const decoded = decodeURIComponent(mapSearchDeepLink.replace(/\+/g, ' ')).trim();
+    if (!decoded) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    setSearchQuery(decoded);
+
+    (async () => {
+      try {
+        const res = await fetch(`${API}/locations/search?query=${encodeURIComponent(decoded)}`);
+        const data = await res.json();
+        if (cancelled) return;
+        const arr = Array.isArray(data) ? data : [];
+        setSearchResults(arr);
+        setShowResults(arr.length > 0);
+        const exact =
+          arr.find((l) => (l.locationName || '').toLowerCase() === decoded.toLowerCase()) ?? arr[0];
+        if (exact) {
+          setExpandedCategory(exact.category);
+          setSelectedLocation(exact);
+        }
+      } catch {
+        /* ignore */
+      }
+      if (!cancelled) navigate('/campus-map', { replace: true });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mapSearchDeepLink, navigate]);
 
   // ── Admin Route Manager state ───────────────────────────────────────────────
   const [adminRoutes, setAdminRoutes] = useState([]);
@@ -342,23 +384,33 @@ const CampusMap = ({ user }) => {
         const msg = await res.text();
         setAdminRouteErrors({ api: msg || 'Failed to add route' });
       }
-    } catch (err) {
+    } catch {
       setAdminRouteErrors({ api: 'Network error submitting route' });
       setUploading(false);
     }
   };
 
   const handleDeleteAdminRoute = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this route step?')) return;
+    const ok = await showConfirm({
+      title: 'Delete route step',
+      message: 'Are you sure you want to delete this route step?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`${API}/admin/routes/step/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchDefinedRoutes();
       } else {
-        alert('Failed to delete route step');
+        await showAlert({ title: 'Delete failed', message: 'Failed to delete route step.' });
       }
-    } catch (err) {
-      alert('Network error deleting route step');
+    } catch {
+      await showAlert({
+        title: 'Network error',
+        message: 'Network error deleting route step.',
+      });
     }
   };
 
@@ -574,7 +626,7 @@ const CampusMap = ({ user }) => {
         const msg = await res.text();
         setSuggestErrors({ api: msg || 'Submission failed. Please try again.' });
       }
-    } catch (err) {
+    } catch {
       setSuggestErrors({ api: 'Network error. Is the backend running?' });
     } finally {
       setSuggestSubmitting(false);
@@ -1081,7 +1133,7 @@ const CampusMap = ({ user }) => {
           SECTION 4 — ADMIN ROUTE MANAGER
       ═══════════════════════════════════════════════════════════════════ */}
       {user?.role === 'ADMIN' && (
-        <div className="map-section-card glass-card admin-routes-panel" style={{ border: '2px solid var(--accent-magenta)' }}>
+        <div className="map-section-card glass-card admin-routes-panel" style={{ border: '2px solid var(--glass-border-accent)' }}>
           <div className="map-section-header">
             <span className="map-section-icon">⚙️</span>
             <span className="map-section-title">Manage Route Steps (Admin Only)</span>
@@ -1214,10 +1266,10 @@ const CampusMap = ({ user }) => {
                 {adminRouteErrors.stepDescription && <span className="field-error-text">{adminRouteErrors.stepDescription}</span>}
               </div>
 
-              {adminRouteErrors.api && <div className="field-error-text" style={{ color: 'var(--accent-magenta)', marginBottom: '0.5rem', fontWeight: 'bold' }}>{adminRouteErrors.api}</div>}
+              {adminRouteErrors.api && <div className="field-error-text" style={{ color: 'var(--accent-teal)', marginBottom: '0.5rem', fontWeight: 'bold' }}>{adminRouteErrors.api}</div>}
 
               <div style={{ marginTop: '1rem' }}>
-                <button type="submit" className="get-directions-btn" disabled={uploading} style={{ padding: '0.6rem 1.5rem', background: 'var(--accent-magenta)' }}>
+                <button type="submit" className="primary-btn" disabled={uploading}>
                   {uploading ? 'Uploading Image...' : '+ Add Route Step'}
                 </button>
               </div>
@@ -1249,7 +1301,13 @@ const CampusMap = ({ user }) => {
                         <td style={{ padding: '0.5rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{route.stepDescription}</td>
                         <td style={{ padding: '0.5rem' }}>{route.imageFileName || <span style={{color: 'var(--text-secondary)'}}>Text-only</span>}</td>
                         <td style={{ padding: '0.5rem' }}>
-                          <button onClick={() => handleDeleteAdminRoute(route.id)} style={{ background: 'var(--status-rejected)', color: 'white', border: 'none', borderRadius: '4px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>Delete</button>
+                          <button
+                            type="button"
+                            className="secondary-btn admin-route-delete-btn"
+                            onClick={() => handleDeleteAdminRoute(route.id)}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))

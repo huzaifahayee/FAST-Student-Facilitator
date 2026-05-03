@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './TimetableManager.css';
 
 const TIMETABLE_DEPT_OPTIONS = [
@@ -30,6 +31,7 @@ const TIMETABLE_SECTION_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((s) =>
 }));
 
 const TimetableManager = ({ user }) => {
+  const { showAlert } = useFsfDialog();
   const [department, setDepartment] = useState('CS');
   const [batch, setBatch] = useState('24');
   const [section, setSection] = useState('A');
@@ -98,7 +100,10 @@ const TimetableManager = ({ user }) => {
         const errText = await res.text();
         throw new Error(errText || 'Failed to upload timetable');
       }
-      alert("Timetable successfully uploaded and parsed!");
+      await showAlert({
+        title: 'Upload complete',
+        message: 'Timetable successfully uploaded and parsed!',
+      });
       setUploadUrl('');
       setSelectedFile(null);
       loadTimetable(); // reload after upload

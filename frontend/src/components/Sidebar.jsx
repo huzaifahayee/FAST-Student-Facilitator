@@ -75,7 +75,7 @@ const Sidebar = ({ user }) => {
             <span className="nav-icon">🔔</span>
             Reminders
           </Link>
-          <Link to="/map" className={`nav-item ${isLinkActive('/map') ? 'active' : ''}`}>
+          <Link to="/campus-map" className={`nav-item ${isLinkActive('/campus-map') ? 'active' : ''}`}>
             <span className="nav-icon">🗺️</span>
             Map Guide
           </Link>

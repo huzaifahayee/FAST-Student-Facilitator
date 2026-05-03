@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './CampusEventBoard.css';
 
 const CampusEventBoard = ({ user }) => {
+    const { showAlert, showConfirm } = useFsfDialog();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [semesterPlan, setSemesterPlan] = useState([]);
     const [viewMode, setViewMode] = useState('BOARD'); // 'BOARD' or 'PLAN'
@@ -21,13 +26,9 @@ const CampusEventBoard = ({ user }) => {
     const [formData, setFormData] = useState(blankForm());
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [flashEventId, setFlashEventId] = useState(null);
 
     const isAdmin = user?.role === 'ADMIN';
-
-    useEffect(() => {
-        loadEvents();
-        loadSemesterPlan();
-    }, []);
 
     const loadEvents = async () => {
         setLoading(true);
@@ -36,7 +37,7 @@ const CampusEventBoard = ({ user }) => {
             const data = await res.json();
             setEvents(data);
         } catch (err) {
-            console.error("Error loading events", err);
+            console.error('Error loading events', err);
         } finally {
             setLoading(false);
         }
@@ -48,9 +49,63 @@ const CampusEventBoard = ({ user }) => {
             const data = await res.json();
             setSemesterPlan(data);
         } catch (err) {
-            console.error("Error loading semester plan", err);
+            console.error('Error loading semester plan', err);
         }
     };
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- initial board + plan load
+        loadEvents();
+        loadSemesterPlan();
+    }, []);
+
+    useEffect(() => {
+        if (searchParams.get('event')) return;
+        const q = searchParams.get('q');
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+        if (q !== null) setSearchQuery((prev) => (q !== prev ? q : prev));
+    }, [searchParams]);
+
+    useEffect(() => {
+        const raw = searchParams.get('event');
+        if (!raw || events.length === 0) return;
+        const id = parseInt(raw, 10);
+
+        const stripEventParam = () => {
+            const next = new URLSearchParams(searchParams);
+            next.delete('event');
+            const qs = next.toString();
+            navigate(`/events${qs ? `?${qs}` : ''}`, { replace: true });
+        };
+
+        if (!Number.isFinite(id)) {
+            stripEventParam();
+            return;
+        }
+        const exists = events.some((e) => e.id === id);
+        if (!exists) {
+            stripEventParam();
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- open highlighted event card from global search
+        setViewMode('BOARD');
+        setSearchQuery('');
+        setFlashEventId(id);
+        stripEventParam();
+    }, [searchParams, events, navigate]);
+
+    useEffect(() => {
+        if (!flashEventId) return;
+        const t = window.setTimeout(() => {
+            const el = document.getElementById(`event-card-${flashEventId}`);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el?.classList.add('deep-link-highlight');
+            window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+            setFlashEventId(null);
+        }, 160);
+        return () => window.clearTimeout(t);
+    }, [flashEventId]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -87,7 +142,10 @@ const CampusEventBoard = ({ user }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user || !user.email) {
-            alert("User session error. Please log in again.");
+            await showAlert({
+                title: 'Session error',
+                message: 'User session error. Please log in again.',
+            });
             return;
         }
 
@@ -110,12 +168,12 @@ const CampusEventBoard = ({ user }) => {
 
             if (res.ok) {
                 if (isEditing) {
-                    alert("Event updated.");
+                    await showAlert({ title: 'Saved', message: 'Event updated.' });
                 } else {
                     const dest = formData.semesterPlan
                         ? 'Event Board (also added to Semester Plan)'
                         : 'Event Board';
-                    alert(`Event added to ${dest}.`);
+                    await showAlert({ title: 'Event added', message: `Event added to ${dest}.` });
                 }
                 setShowModal(false);
                 setEditingId(null);
@@ -125,27 +183,40 @@ const CampusEventBoard = ({ user }) => {
             } else {
                 const err = await res.text();
                 console.error("Submission failed:", err);
-                alert("Error: " + err);
+                await showAlert({ title: 'Error', message: 'Error: ' + err });
             }
         } catch (err) {
             console.error("Network Error:", err);
-            alert("Network Error: Could not connect to backend.");
+            await showAlert({
+                title: 'Network error',
+                message: 'Could not connect to backend.',
+            });
         }
     };
 
     const handleDelete = async (event) => {
-        if (!window.confirm(`Delete "${event.title}"?`)) return;
+        const ok = await showConfirm({
+            title: 'Delete event',
+            message: `Delete "${event.title}"?`,
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            danger: true,
+        });
+        if (!ok) return;
         try {
             const res = await fetch(`http://localhost:8080/api/events/${event.id}`, { method: 'DELETE' });
             if (res.ok) {
                 loadEvents();
                 loadSemesterPlan();
             } else {
-                alert("Delete failed.");
+                await showAlert({ title: 'Delete failed', message: 'Delete failed.' });
             }
         } catch (err) {
             console.error(err);
-            alert("Network Error: Could not connect to backend.");
+            await showAlert({
+                title: 'Network error',
+                message: 'Could not connect to backend.',
+            });
         }
     };
 
@@ -163,23 +234,36 @@ const CampusEventBoard = ({ user }) => {
                 body: formDataUpload,
             });
             if (res.ok) {
-                alert("Semester Plan uploaded successfully!");
+                await showAlert({
+                    title: 'Upload complete',
+                    message: 'Semester Plan uploaded successfully!',
+                });
                 loadSemesterPlan();
                 loadEvents();
             } else {
-                alert("Upload failed.");
+                await showAlert({ title: 'Upload failed', message: 'Upload failed.' });
             }
         } catch (err) {
             console.error(err);
-            alert("Error connecting to server.");
+            await showAlert({
+                title: 'Network error',
+                message: 'Error connecting to server.',
+            });
         }
     };
 
     const filteredEvents = (viewMode === 'BOARD' ? events : semesterPlan).filter(event => {
-        const query = searchQuery.toLowerCase();
-        return event.title.toLowerCase().includes(query) ||
-               event.eventDate.includes(query) ||
-               event.category.toLowerCase().includes(query);
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return true;
+        const hay = [
+            event.title,
+            event.description,
+            event.eventDate,
+            event.category,
+            event.venue,
+            event.organizer,
+        ].map((v) => String(v || '').toLowerCase());
+        return hay.some((s) => s.includes(query));
     });
 
     /** Imported calendar holidays use Administration + HOLIDAY; Add Event never does. */
@@ -241,7 +325,7 @@ const CampusEventBoard = ({ user }) => {
                 viewMode === 'BOARD' ? (
                     <div className="event-grid">
                         {filteredEvents.map(event => (
-                            <div key={event.id} className="event-card glass-card">
+                            <div key={event.id} id={`event-card-${event.id}`} className="event-card glass-card">
                                 <div className="card-header">
                                     <span className={`category-tag ${event.category.toLowerCase()}`}>{event.category}</span>
                                     <span className="event-date">{new Date(event.eventDate).toLocaleDateString()}</span>

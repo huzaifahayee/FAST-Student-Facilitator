@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './FastNotes.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/notes';
 
 function FastNotes({ user }) {
+  const { showAlert } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [notes, setNotes] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
@@ -13,6 +18,7 @@ function FastNotes({ user }) {
   const [courseCodes, setCourseCodes] = useState([]);
   
   const [showModal, setShowModal] = useState(false);
+  const [flashNoteId, setFlashNoteId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     subjectName: '',
@@ -47,9 +53,44 @@ function FastNotes({ user }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- notes reload
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKeyword, subjectFilter, courseCodeFilter]);
+
+  useEffect(() => {
+    if (searchParams.get('note')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setSearchKeyword((prev) => (q !== prev ? q : prev));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('note');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- deep-link scroll target */
+    setSearchKeyword('');
+    setFlashNoteId(id);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    const next = new URLSearchParams(searchParams);
+    next.delete('note');
+    const qs = next.toString();
+    navigate(`/notes${qs ? `?${qs}` : ''}`, { replace: true });
+  }, [searchParams, navigate]);
+
+  useEffect(() => {
+    if (!flashNoteId) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`note-card-${flashNoteId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.classList.add('deep-link-highlight');
+      window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+      setFlashNoteId(null);
+    }, 140);
+    return () => window.clearTimeout(t);
+  }, [notes, flashNoteId]);
 
   const subjectOptions = useMemo(
     () => [{ value: '', label: 'All Subjects' }, ...subjects.map((s) => ({ value: s, label: s }))],
@@ -84,21 +125,30 @@ function FastNotes({ user }) {
         let errorData;
         try {
           errorData = await res.json();
-        } catch (e) {
+        } catch {
           // Fallback if not JSON
         }
         
         const errorMessage = errorData?.message || "Please upload PDF or DOCX only.";
         
         if (res.status === 400) {
-          alert(`🚫 CRITICAL ERROR\n\n${errorMessage}`);
+          await showAlert({
+            title: 'Upload rejected',
+            message: `🚫 CRITICAL ERROR\n\n${errorMessage}`,
+          });
         } else {
-          alert(`⚠️ Server Error: ${errorMessage}`);
+          await showAlert({
+            title: 'Server error',
+            message: `⚠️ Server Error: ${errorMessage}`,
+          });
         }
       }
     } catch (err) {
       console.error(err);
-      alert("Network Error: Backend is unreachable.");
+      await showAlert({
+        title: 'Network error',
+        message: 'Backend is unreachable.',
+      });
     }
   };
 
@@ -167,7 +217,7 @@ function FastNotes({ user }) {
           <p className="no-items">No notes found.</p>
         ) : (
           notes.map(note => (
-            <div key={note.id} className="glass-card note-card">
+            <div key={note.id} id={`note-card-${note.id}`} className="glass-card note-card">
               
               <div className="vote-controls">
                 <div className="vote-item">

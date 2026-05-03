@@ -1,11 +1,11 @@
 package com.fast.fsf.config;
 
-import com.fast.fsf.model.Admin;
-import com.fast.fsf.model.PastPaper;
-import com.fast.fsf.model.TimetableEntry;
-import com.fast.fsf.repository.AdminRepository;
-import com.fast.fsf.repository.PastPaperRepository;
-import com.fast.fsf.repository.TimetableEntryRepository;
+import com.fast.fsf.admin.domain.Admin;
+import com.fast.fsf.pastpapers.domain.PastPaper;
+import com.fast.fsf.timetable.domain.TimetableEntry;
+import com.fast.fsf.admin.persistence.AdminRepository;
+import com.fast.fsf.pastpapers.persistence.PastPaperRepository;
+import com.fast.fsf.timetable.persistence.TimetableEntryRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,9 +48,9 @@ public class DatabaseSeeder {
 
     @Bean
     CommandLineRunner seedPastPapers(PastPaperRepository repo,
-                                     com.fast.fsf.repository.PaperRatingRepository ratingRepo,
-                                     com.fast.fsf.repository.PaperCommentRepository commentRepo,
-                                     com.fast.fsf.repository.PaperReportRepository reportRepo) {
+                                     com.fast.fsf.pastpapers.persistence.PaperRatingRepository ratingRepo,
+                                     com.fast.fsf.pastpapers.persistence.PaperCommentRepository commentRepo,
+                                     com.fast.fsf.pastpapers.persistence.PaperReportRepository reportRepo) {
         return args -> {
             System.out.println("DEBUG: Wiping Database explicitly for test run...");
             ratingRepo.deleteAll();

@@ -200,15 +200,65 @@
   color: var(--text-primary);
 }
 
-.cp-tag {
-  display: inline-block;
+.cp-field-hint {
+  margin: -8px 0 var(--spacing-md);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.cp-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cp-tag-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: var(--accent-glow);
-  color: var(--accent-teal);
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 11px;
-  margin-right: 8px;
   border: 1px solid var(--accent-teal);
+  border-radius: 99px;
+  padding: 4px 6px 4px 12px;
+}
+
+.cp-tag {
+  font-size: 11px;
+  color: var(--accent-teal);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cp-tag-remove:hover {
+  background: rgba(255, 77, 77, 0.25);
+  color: #ff6b6b;
+}
+
+[data-theme='light'] .cp-tag-remove:hover {
+  background: rgba(200, 40, 40, 0.15);
+  color: #c62828;
 }
 
 /* Form Header & Error Feedback */

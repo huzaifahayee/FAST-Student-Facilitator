@@ -1,7 +1,62 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { RefreshCw, X } from 'lucide-react';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './Carpool.css';
+
+const MIN_SEATS = 1;
+const MAX_SEATS = 4;
+
+/** Compact (830), colon (8:30 / 14:30), optional am/pm → normalized "h:mm AM|PM". */
+function format12h(h24, m) {
+  const isPm = h24 >= 12;
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${isPm ? 'PM' : 'AM'}`;
+}
+
+function parseDepartureTime(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) return { ok: false };
+
+  const colon = s.match(/^(\d{1,2})\s*:\s*(\d{2})\s*(am|pm)?$/i);
+  if (colon) {
+    const h = parseInt(colon[1], 10);
+    const m = parseInt(colon[2], 10);
+    const ap = colon[3]?.toLowerCase();
+    if (Number.isNaN(h) || Number.isNaN(m) || m > 59 || m < 0) return { ok: false };
+
+    let h24;
+    if (ap === 'am') {
+      if (h < 1 || h > 12) return { ok: false };
+      h24 = h === 12 ? 0 : h;
+    } else if (ap === 'pm') {
+      if (h < 1 || h > 12) return { ok: false };
+      h24 = h === 12 ? 12 : h + 12;
+    } else {
+      if (h < 0 || h > 23) return { ok: false };
+      h24 = h;
+    }
+    return { ok: true, formatted: format12h(h24, m) };
+  }
+
+  const digits = s.replace(/\D/g, '');
+  if (digits.length !== 3 && digits.length !== 4) return { ok: false };
+
+  const n = parseInt(digits, 10);
+  const h = Math.floor(n / 100);
+  const m = n % 100;
+  if (m > 59 || h > 23 || h < 0) return { ok: false };
+
+  return { ok: true, formatted: format12h(h, m) };
+}
+
+function clampSeats(value) {
+  const v = typeof value === 'number' ? value : parseInt(String(value), 10);
+  if (Number.isNaN(v)) return MIN_SEATS;
+  return Math.min(MAX_SEATS, Math.max(MIN_SEATS, v));
+}
 
 const VEHICLE_OPTIONS = [
   { value: 'Car', label: 'Car' },
@@ -17,6 +72,9 @@ const VEHICLE_OPTIONS = [
  * 2. SRS NFR 4.2.1: Real-time filtering.
  */
 const Carpool = ({ user }) => {
+  const { showAlert, showConfirm } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [rides, setRides] = useState([]);
   const [isOffering, setIsOffering] = useState(false);
   const [newRide, setNewRide] = useState({
@@ -27,6 +85,49 @@ const Carpool = ({ user }) => {
   const [currentCheckpoint, setCurrentCheckpoint] = useState('');
   const [validationError, setValidationError] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [routeFilter, setRouteFilter] = useState('');
+
+  useEffect(() => {
+    if (searchParams.get('ride')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setRouteFilter(q);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('ride');
+    if (!raw) return;
+    const rideId = parseInt(raw, 10);
+    if (!Number.isFinite(rideId)) return;
+
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`ride-card-${rideId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.classList.add('deep-link-highlight');
+      window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+
+      const next = new URLSearchParams(searchParams);
+      next.delete('ride');
+      const qs = next.toString();
+      navigate(`/carpool${qs ? `?${qs}` : ''}`, { replace: true });
+    }, 160);
+
+    return () => window.clearTimeout(t);
+  }, [searchParams, rides, navigate]);
+
+  const filteredRides = useMemo(() => {
+    const t = routeFilter.trim().toLowerCase();
+    if (!t) return rides;
+    return rides.filter((r) => {
+      const parts = [
+        r.origin,
+        r.destination,
+        r.departureTime,
+        ...(Array.isArray(r.checkpoints) ? r.checkpoints : []),
+      ];
+      return parts.some((p) => String(p || '').toLowerCase().includes(t));
+    });
+  }, [rides, routeFilter]);
 
   const loadRides = useCallback(async () => {
     const res = await fetch('http://localhost:8080/api/rides');
@@ -36,6 +137,7 @@ const Carpool = ({ user }) => {
 
   // Fetch rides on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load
     loadRides().catch((err) => console.error('Failed to fetch rides', err));
   }, [loadRides]);
 
@@ -60,19 +162,61 @@ const Carpool = ({ user }) => {
   };
 
   const addCheckpoint = () => {
-    if (newRide.checkpoints.length < 5 && currentCheckpoint) {
-      setNewRide({...newRide, checkpoints: [...newRide.checkpoints, currentCheckpoint]});
-      setCurrentCheckpoint('');
-    }
+    const label = currentCheckpoint.trim();
+    if (!label) return;
+    setNewRide((prev) => {
+      if (prev.checkpoints.length >= 5) return prev;
+      return { ...prev, checkpoints: [...prev.checkpoints, label] };
+    });
+    setCurrentCheckpoint('');
+  };
+
+  const removeCheckpoint = async (index, label) => {
+    const message = label
+      ? `Remove checkpoint "${label}"?`
+      : 'Remove this checkpoint?';
+    const ok = await showConfirm({
+      title: 'Remove checkpoint',
+      message,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+    setNewRide((prev) => ({
+      ...prev,
+      checkpoints: prev.checkpoints.filter((_, i) => i !== index),
+    }));
+  };
+
+  const normalizeDepartureTimeOnBlur = () => {
+    setNewRide((prev) => {
+      const raw = prev.departureTime.trim();
+      if (!raw) return prev;
+      const parsed = parseDepartureTime(raw);
+      if (!parsed.ok) return prev;
+      return { ...prev, departureTime: parsed.formatted };
+    });
   };
 
   const handleFlag = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to report this ride? Misuse of the reporting system may lead to an account ban.");
+    const confirmed = await showConfirm({
+      title: 'Report ride',
+      message:
+        'Are you sure you want to report this ride? Misuse of the reporting system may lead to an account ban.',
+      confirmText: 'Report',
+      cancelText: 'Cancel',
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {
       await fetch(`http://localhost:8080/api/rides/${id}/flag`, { method: 'PUT' });
-      alert("This ride has been reported for review. Thank you for keeping the community safe!");
+      await showAlert({
+        title: 'Report submitted',
+        message:
+          'This ride has been reported for review. Thank you for keeping the community safe!',
+      });
       fetchRides();
     } catch (err) {
       console.error("Failed to flag ride:", err);
@@ -87,9 +231,19 @@ const Carpool = ({ user }) => {
       return;
     }
 
+    const timeParsed = parseDepartureTime(newRide.departureTime);
+    if (!timeParsed.ok) {
+      setValidationError(
+        'Enter a valid departure time (e.g. 830 → 8:30 AM, 8:30, 14:45, or 2:30 pm).'
+      );
+      return;
+    }
+
+    const seats = clampSeats(newRide.availableSeats);
+
     // VALIDATION: Phone number must be exactly 11 digits
     const phoneRegex = /^\d{11}$/;
-    if (!phoneRegex.test(newRide.contactInfo)) {
+    if (!phoneRegex.test(newRide.contactInfo.trim())) {
       setValidationError("Please enter a valid 11-digit phone number.");
       return;
     }
@@ -102,13 +256,19 @@ const Carpool = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newRide,
+          departureTime: timeParsed.formatted,
+          availableSeats: seats,
           driverName: user.name,
           driverEmail: user.email,
         })
       });
       if (res.ok) {
         setIsOffering(false);
-        alert("Ride offer submitted! 👋 It will appear on the portal once an Admin verifies and approves it.");
+        await showAlert({
+          title: 'Ride submitted',
+          message:
+            'Ride offer submitted! 👋 It will appear on the portal once an Admin verifies and approves it.',
+        });
         fetchRides();
         // Reset form
         setNewRide({
@@ -119,7 +279,7 @@ const Carpool = ({ user }) => {
         const body = await res.text();
         setValidationError(`Could not post ride (status ${res.status}). ${body || ''}`.trim());
       }
-    } catch (err) {
+    } catch {
       setValidationError("Network error while posting ride. Is the backend running?");
     }
   };
@@ -153,14 +313,56 @@ const Carpool = ({ user }) => {
           </div>
           <form onSubmit={handleOfferSubmit}>
             <div className="form-grid">
-              <input type="text" placeholder="Origin (e.g., Johar Town)" required 
-                onChange={e => setNewRide({...newRide, origin: e.target.value})} />
-              <input type="text" placeholder="Destination (e.g., FAST)" required 
-                onChange={e => setNewRide({...newRide, destination: e.target.value})} />
-              <input type="text" placeholder="Time (e.g., 08:30 AM)" required 
-                onChange={e => setNewRide({...newRide, departureTime: e.target.value})} />
-              <input type="number" placeholder="Seats" min="1" max="4" required 
-                onChange={e => setNewRide({...newRide, availableSeats: e.target.value})} />
+              <input
+                type="text"
+                placeholder="Origin (e.g., Johar Town)"
+                required
+                value={newRide.origin}
+                onChange={(e) => setNewRide({ ...newRide, origin: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Destination (e.g., FAST)"
+                required
+                value={newRide.destination}
+                onChange={(e) => setNewRide({ ...newRide, destination: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Time (e.g., 830 or 8:30)"
+                required
+                value={newRide.departureTime}
+                onChange={(e) => setNewRide({ ...newRide, departureTime: e.target.value })}
+                onBlur={normalizeDepartureTimeOnBlur}
+                aria-describedby="cp-time-hint"
+              />
+              <input
+                type="number"
+                placeholder={`Seats (${MIN_SEATS}–${MAX_SEATS})`}
+                min={MIN_SEATS}
+                max={MAX_SEATS}
+                step={1}
+                required
+                value={newRide.availableSeats}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    setNewRide({ ...newRide, availableSeats: '' });
+                    return;
+                  }
+                  const n = parseInt(raw, 10);
+                  if (Number.isNaN(n)) return;
+                  setNewRide({ ...newRide, availableSeats: clampSeats(n) });
+                }}
+                onBlur={() => {
+                  setNewRide((prev) => {
+                    if (prev.availableSeats === '' || Number(prev.availableSeats) < MIN_SEATS) {
+                      return { ...prev, availableSeats: MIN_SEATS };
+                    }
+                    return prev;
+                  });
+                }}
+              />
               
               <IosPickerField
                 className="cp-vehicle-picker"
@@ -170,9 +372,17 @@ const Carpool = ({ user }) => {
                 sheetTitle="Vehicle type"
               />
 
-              <input type="text" placeholder="Phone (e.g., 03001234567)" required 
-                onChange={e => setNewRide({...newRide, contactInfo: e.target.value})} />
+              <input
+                type="text"
+                placeholder="Phone (e.g., 03001234567)"
+                required
+                value={newRide.contactInfo}
+                onChange={(e) => setNewRide({ ...newRide, contactInfo: e.target.value })}
+              />
             </div>
+            <p id="cp-time-hint" className="cp-field-hint">
+              Leaving the time field formats compact numbers (e.g. 830 → 8:30 AM). You can also use 24h (14:30).
+            </p>
 
             <div className="checkpoint-section">
               <div className="cp-input">
@@ -185,11 +395,22 @@ const Carpool = ({ user }) => {
                 />
                 <button type="button" className="add-btn" onClick={addCheckpoint}>Add</button>
               </div>
-              <div className="cp-tags">
+              <ul className="cp-tags" aria-label="Added checkpoints">
                 {newRide.checkpoints.map((cp, i) => (
-                  <span key={i} className="cp-tag">{cp}</span>
+                  <li key={i} className="cp-tag-row">
+                    <span className="cp-tag">{cp}</span>
+                    <button
+                      type="button"
+                      className="cp-tag-remove"
+                      onClick={() => removeCheckpoint(i, cp)}
+                      aria-label={`Remove checkpoint ${cp}`}
+                      title="Remove"
+                    >
+                      <X size={14} strokeWidth={2.5} aria-hidden />
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
             <div className="form-btns">
@@ -206,9 +427,9 @@ const Carpool = ({ user }) => {
         </div>
 
         <div className={`rides-list${isRefreshing ? ' rides-list--refreshing' : ''}`}>
-          {rides.length > 0 ? (
-            rides.map((ride, i) => (
-              <div key={i} className="ride-card glass-card">
+          {filteredRides.length > 0 ? (
+            filteredRides.map((ride) => (
+              <div key={ride.id} id={`ride-card-${ride.id}`} className="ride-card glass-card">
                 <div className="ride-main">
                   <div className="route">
                     <span className="origin">{ride.origin}</span>
@@ -245,7 +466,11 @@ const Carpool = ({ user }) => {
             ))
           ) : (
             <div className="ride-card glass-card empty-state">
-              <p>No active rides currently available.</p>
+              <p>
+                {routeFilter.trim()
+                  ? 'No rides match your search.'
+                  : 'No active rides currently available.'}
+              </p>
               <p className="subtext">Be the first to offer a ride today!</p>
             </div>
           )}

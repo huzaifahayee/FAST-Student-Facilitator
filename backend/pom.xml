@@ -72,6 +72,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- In-memory DB — optional profile h2 only; default runs always use PostgreSQL -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- 
           Spring Security & OAuth2:
           Mandatory for UC-01/02. This handles the Google Login flow 

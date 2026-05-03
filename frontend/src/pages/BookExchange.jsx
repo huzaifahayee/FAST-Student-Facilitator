@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './BookExchange.css';
 
 const BOOK_CONDITION_OPTIONS = [
@@ -10,6 +12,9 @@ const BOOK_CONDITION_OPTIONS = [
 ];
 
 const BookExchange = ({ user }) => {
+  const { showAlert, showConfirm } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('SELL');
   const [books, setBooks] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
@@ -20,13 +25,10 @@ const BookExchange = ({ user }) => {
     bookCondition: 'Good', price: '', frontCoverImage: '', backCoverImage: '', listingType: 'SELL'
   });
   
-   const [validationError, setValidationError] = useState('');
+  const [validationError, setValidationError] = useState('');
    const [editBookId, setEditBookId] = useState(null);
-   const [selectedImage, setSelectedImage] = useState(null);
-
-  useEffect(() => {
-    fetchBooks();
-  }, [activeTab]);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [flashBookId, setFlashBookId] = useState(null);
 
   const fetchBooks = async () => {
     try {
@@ -38,9 +40,59 @@ const BookExchange = ({ user }) => {
       const data = await res.json();
       setBooks(data);
     } catch (err) {
-      console.error("Failed to fetch books", err);
+      console.error('Failed to fetch books', err);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load listings when tab/search changes
+    fetchBooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, searchQuery]);
+
+  useEffect(() => {
+    if (searchParams.get('book')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setSearchQuery((prev) => (q !== prev ? q : prev));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('book');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+
+    fetch(`http://localhost:8080/api/books/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Listing not found');
+        return res.json();
+      })
+      .then((book) => {
+        setActiveTab(book.listingType === 'BUY' ? 'BUY' : 'SELL');
+        setSearchQuery('');
+        setFlashBookId(id);
+      })
+      .catch(() => {})
+      .finally(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete('book');
+        const qs = next.toString();
+        navigate(`/marketplace${qs ? `?${qs}` : ''}`, { replace: true });
+      });
+  }, [searchParams, navigate]);
+
+  useEffect(() => {
+    if (!flashBookId) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`book-card-${flashBookId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.classList.add('deep-link-highlight');
+      window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+      setFlashBookId(null);
+    }, 140);
+    return () => window.clearTimeout(t);
+  }, [books, flashBookId]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -48,12 +100,21 @@ const BookExchange = ({ user }) => {
   };
 
   const handleFlag = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to report this listing? Misuse may lead to a ban.");
+    const confirmed = await showConfirm({
+      title: 'Report listing',
+      message: 'Are you sure you want to report this listing? Misuse may lead to a ban.',
+      confirmText: 'Report',
+      cancelText: 'Cancel',
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {
       await fetch(`http://localhost:8080/api/books/${id}/flag`, { method: 'PUT' });
-      alert("This listing has been reported for review.");
+      await showAlert({
+        title: 'Report submitted',
+        message: 'This listing has been reported for review.',
+      });
       fetchBooks();
     } catch (err) {
       console.error("Failed to flag listing:", err);
@@ -73,7 +134,7 @@ const BookExchange = ({ user }) => {
     const file = e.target.files[0];
     if (file) {
       if (file.type !== 'image/png') {
-        alert("Please upload a PNG image.");
+        void showAlert({ title: 'Invalid file', message: 'Please upload a PNG image.' });
         e.target.value = null;
         return;
       }
@@ -122,9 +183,13 @@ const BookExchange = ({ user }) => {
       });
 
       if (res.ok) {
+        const wasEdit = !!editBookId;
         setIsPosting(false);
         setEditBookId(null);
-        alert(`Listing ${editBookId ? 'updated' : 'submitted'}! It will appear once an Admin approves it.`);
+        await showAlert({
+          title: wasEdit ? 'Listing updated' : 'Listing submitted',
+          message: `Listing ${wasEdit ? 'updated' : 'submitted'}! It will appear once an Admin approves it.`,
+        });
         fetchBooks();
         setNewBook({
           bookTitle: '', author: '', courseCode: '',
@@ -133,13 +198,19 @@ const BookExchange = ({ user }) => {
       } else {
         setValidationError(`Failed to save listing (${res.status}).`);
       }
-    } catch (err) {
-      setValidationError("Network error while saving.");
+    } catch {
+      setValidationError('Network error while saving.');
     }
   };
 
   const handleClose = async (id) => {
-    if (!window.confirm("Mark this listing as closed/fulfilled?")) return;
+    const ok = await showConfirm({
+      title: 'Close listing',
+      message: 'Mark this listing as closed/fulfilled?',
+      confirmText: 'Mark closed',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
     try {
       await fetch(`http://localhost:8080/api/books/${id}/close`, { method: 'PUT' });
       fetchBooks();
@@ -149,7 +220,14 @@ const BookExchange = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this listing?")) return;
+    const ok = await showConfirm({
+      title: 'Delete listing',
+      message: 'Are you sure you want to delete this listing?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await fetch(`http://localhost:8080/api/books/${id}?reason=User+deleted+own+listing`, { method: 'DELETE' });
       fetchBooks();
@@ -290,7 +368,11 @@ const BookExchange = ({ user }) => {
         <div className="listings-grid">
           {books.length > 0 ? (
             books.map((book) => (
-              <div key={book.id} className={`book-card glass-card ${book.status === 'CLOSED' ? 'closed' : ''}`}>
+              <div
+                key={book.id}
+                id={`book-card-${book.id}`}
+                className={`book-card glass-card ${book.status === 'CLOSED' ? 'closed' : ''}`}
+              >
                 {book.frontCoverImage && book.backCoverImage ? (
                   <div className="book-images-container">
                     <div className="book-image" 
@@ -335,7 +417,19 @@ const BookExchange = ({ user }) => {
                     </div>
                     <div className="actions">
                       {activeTab === 'BUY' ? (
-                        <button className="primary-btn" style={{padding: '0.4rem 1rem'}} onClick={() => alert(`Interested in buying? Contact the seller at: ${book.ownerEmail}`)}>🛒 BUY</button>
+                        <button
+                          type="button"
+                          className="primary-btn"
+                          style={{ padding: '0.4rem 1rem' }}
+                          onClick={() =>
+                            void showAlert({
+                              title: 'Contact seller',
+                              message: `Interested in buying? Contact the seller at:\n${book.ownerEmail}`,
+                            })
+                          }
+                        >
+                          🛒 BUY
+                        </button>
                       ) : (
                         book.ownerEmail === user?.email ? (
                           <>

@@ -97,3 +97,11 @@
   overflow-y: auto;
   color: var(--text-primary);
 }
+
+/* Brief pulse when opening a card from global search deep-links */
+.deep-link-highlight {
+  outline: 2px solid var(--accent-fill);
+  outline-offset: 4px;
+  border-radius: 12px;
+  transition: outline-color 0.3s ease;
+}

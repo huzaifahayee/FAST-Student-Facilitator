@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
 import './LostAndFound.css';
 import '../styles/IosMenuPicker.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/lost-found';
 
+const LF_CATEGORIES = ['Electronics', 'Wallet/ID', 'Books', 'Keys', 'Clothing', 'Other'];
+
 function LostAndFound({ user }) {
+  const { showAlert } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Lost'); // 'Lost' or 'Found'
-  const [showResolved, setShowResolved] = useState(false);
   const [listings, setListings] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -16,6 +22,7 @@ function LostAndFound({ user }) {
   const categoryMenuRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
+  const [flashListingId, setFlashListingId] = useState(null);
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
@@ -24,10 +31,8 @@ function LostAndFound({ user }) {
     date: ''
   });
 
-  const categories = ['Electronics', 'Wallet/ID', 'Books', 'Keys', 'Clothing', 'Other'];
-
   const modalCategoryOptions = useMemo(
-    () => [{ value: '', label: 'Select Category' }, ...categories.map((c) => ({ value: c, label: c }))],
+    () => [{ value: '', label: 'Select Category' }, ...LF_CATEGORIES.map((c) => ({ value: c, label: c }))],
     []
   );
 
@@ -49,9 +54,54 @@ function LostAndFound({ user }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- listings reload
     fetchListings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, searchKeyword, categoryFilter]);
+
+  useEffect(() => {
+    if (searchParams.get('item')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setSearchKeyword((prev) => (q !== prev ? q : prev));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('item');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+
+    fetch(`${API_BASE_URL}/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('not found');
+        return res.json();
+      })
+      .then((listing) => {
+        setActiveTab(listing.type || 'Lost');
+        setSearchKeyword('');
+        setFlashListingId(id);
+      })
+      .catch(() => {})
+      .finally(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete('item');
+        const qs = next.toString();
+        navigate(`/lost-found${qs ? `?${qs}` : ''}`, { replace: true });
+      });
+  }, [searchParams, navigate]);
+
+  useEffect(() => {
+    if (!flashListingId) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`lf-card-${flashListingId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.classList.add('deep-link-highlight');
+      window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+      setFlashListingId(null);
+    }, 140);
+    return () => window.clearTimeout(t);
+  }, [listings, flashListingId]);
 
   useEffect(() => {
     if (!categoryMenuOpen) return;
@@ -74,7 +124,7 @@ function LostAndFound({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.category) {
-      alert('Please select a category.');
+      await showAlert({ title: 'Category required', message: 'Please select a category.' });
       return;
     }
     try {
@@ -95,11 +145,17 @@ function LostAndFound({ user }) {
         setFormData({ itemName: '', category: '', description: '', location: '', date: '' });
         fetchListings();
       } else {
-        alert("Server Error: Could not submit the listing. Please check the backend connection.");
+        await showAlert({
+          title: 'Server error',
+          message: 'Could not submit the listing. Please check the backend connection.',
+        });
       }
     } catch (err) {
       console.error(err);
-      alert("Network Error: Backend is unreachable.");
+      await showAlert({
+        title: 'Network error',
+        message: 'Backend is unreachable.',
+      });
     }
   };
 
@@ -192,7 +248,7 @@ function LostAndFound({ user }) {
                   >
                     All Categories
                   </button>
-                  {categories.map((c) => (
+                  {LF_CATEGORIES.map((c) => (
                     <button
                       key={c}
                       type="button"
@@ -225,7 +281,7 @@ function LostAndFound({ user }) {
             <p className="no-items">No active items found.</p>
           ) : (
             sortListings(activeListings).map(listing => (
-              <div key={listing.id} className="glass-card listing-card">
+              <div key={listing.id} id={`lf-card-${listing.id}`} className="glass-card listing-card">
                 <h3>{listing.itemName}</h3>
                 <p className="category-badge">{listing.category}</p>
                 <p className="desc">{listing.description}</p>
@@ -254,7 +310,7 @@ function LostAndFound({ user }) {
             <p className="no-items">No resolved items yet.</p>
           ) : (
             sortListings(resolvedListings).map(listing => (
-              <div key={listing.id} className="glass-card listing-card resolved">
+              <div key={listing.id} id={`lf-card-${listing.id}`} className="glass-card listing-card resolved">
                 <div className="resolved-header">
                   <h3>{listing.itemName}</h3>
                   <span className="tick-mark">✔</span>
