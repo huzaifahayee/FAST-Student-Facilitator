@@ -1,0 +1,481 @@
+/* 
+  Carpool.css
+*/
+
+.carpool-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.carpool-header h2 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.carpool-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.carpool-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cp-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cp-refresh-btn .cp-refresh-icon {
+  flex-shrink: 0;
+}
+
+.cp-refresh-btn.is-refreshing .cp-refresh-icon {
+  animation: cp-refresh-spin 0.72s linear infinite;
+}
+
+@keyframes cp-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cp-refresh-btn:disabled {
+  cursor: wait;
+  opacity: 0.94;
+}
+
+/* Sizing: global .primary-btn / .secondary-btn use --fsf-pill-pad-* (Lost & Found tab reference) */
+
+/* Colors / shadows: global .primary-btn & .secondary-btn (index.css pill tokens) */
+
+.rides-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+.rides-list--refreshing {
+  pointer-events: none;
+  opacity: 0.88;
+  filter: saturate(0.88);
+}
+
+.rides-list--refreshing .ride-card {
+  animation: cp-refresh-card-pulse 1s ease-in-out infinite;
+}
+
+@keyframes cp-refresh-card-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-refresh-btn.is-refreshing .cp-refresh-icon {
+    animation: none;
+  }
+
+  .rides-list--refreshing .ride-card {
+    animation: none;
+  }
+
+  .rides-list--refreshing {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+/*
+  Light: visible dark-blue *gradient* frame (multi-stop so a 3px ring doesn’t read flat).
+  Inner fill stays white; outer layer is clipped to the border box only.
+*/
+[data-theme='light'] .rides-list .ride-card.glass-card:not(.empty-state) {
+  border: 3px solid transparent;
+  background-image:
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    linear-gradient(
+      128deg,
+      #020910 0%,
+      #0c2840 18%,
+      #1a4d73 42%,
+      #2f6fa3 52%,
+      #153a55 72%,
+      #050d16 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  -webkit-background-clip: padding-box, border-box;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+[data-theme='light'] .rides-list .ride-card.glass-card:not(.empty-state):hover {
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    linear-gradient(
+      128deg,
+      #030d18 0%,
+      #0f3250 18%,
+      #1f5682 42%,
+      #3b7eb8 52%,
+      #174060 72%,
+      #060f1c 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  -webkit-background-clip: padding-box, border-box;
+}
+
+.empty-state {
+  padding: 80px;
+  text-align: center;
+  border-style: dashed;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.empty-state .subtext {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.offer-form-container {
+  padding: 32px;
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--accent-teal);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-grid input {
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.checkpoint-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.cp-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cp-input input {
+  flex: 1;
+  padding: 8px;
+  background: var(--bg-deep);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.cp-field-hint {
+  margin: -8px 0 var(--spacing-md);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.cp-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cp-tag-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-teal);
+  border-radius: 99px;
+  padding: 4px 6px 4px 12px;
+}
+
+.cp-tag {
+  font-size: 11px;
+  color: var(--accent-teal);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cp-tag-remove:hover {
+  background: rgba(255, 77, 77, 0.25);
+  color: #ff6b6b;
+}
+
+[data-theme='light'] .cp-tag-remove:hover {
+  background: rgba(200, 40, 40, 0.15);
+  color: #c62828;
+}
+
+/* Form Header & Error Feedback */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-text {
+  color: #ff4d4d;
+  font-size: 13px;
+  background: rgba(255, 77, 77, 0.1);
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+/* Select Menu Styling */
+.form-select {
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.form-select option {
+  background: #0a0b10; /* Solid dark background for visibility */
+  color: white;
+}
+
+/* Button Refinement */
+.add-btn {
+  background: transparent;
+  color: var(--accent-teal);
+  border: 1px solid var(--accent-teal);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.add-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.form-btns {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.offer-form-container .form-grid .cp-vehicle-picker {
+  width: 100%;
+  min-width: 0;
+}
+
+.form-btns .post-btn,
+.form-btns .cancel-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ride-info-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.status-badge.approved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  animation: pending-pulse 2s infinite ease-in-out;
+}
+
+@keyframes pending-pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.origin { color: var(--text-primary); }
+.dest { color: var(--accent-teal); }
+.checkpoint { 
+  color: var(--text-secondary); 
+  font-size: 15px;
+  font-weight: 500;
+}
+.arrow { color: var(--text-muted); }
+
+.post-btn {
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--fsf-pill-cta-border);
+  background: var(--fsf-pill-cta-bg);
+  color: var(--fsf-pill-cta-text);
+  box-shadow: var(--fsf-pill-cta-shadow);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.post-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.04);
+}
+
+.cancel-btn {
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--fsf-pill-muted-border);
+  background: var(--fsf-pill-muted-bg);
+  color: var(--fsf-pill-muted-text);
+  box-shadow: var(--fsf-pill-muted-shadow);
+  transition: transform 0.2s ease;
+}
+
+.cancel-btn:hover {
+  transform: scale(1.06);
+}
+
+/* RideCard Footer Refinement */
+.ride-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--spacing-sm);
+}
+
+.offerer-info, .contact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.driver-label, .contact-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.driver-name, .contact-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.driver-name {
+  color: var(--accent-teal);
+}
+
+.report-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: center;
+  transition: transform 0.2s ease;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-theme='light'] .report-btn {
+  background: #ffffff;
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+}
+
+.report-btn:hover {
+  transform: scale(1.06);
+}
+
+/* Hide Spin Buttons (Arrows) in Number Inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}

@@ -1,0 +1,77 @@
+/* 
+  ServiceSkeleton.css
+  
+  What is this file?
+  Styling for the placeholder pages.
+*/
+
+.skeleton-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  margin-top: var(--spacing-lg);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-radius: 24px;
+}
+
+.skeleton-content {
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.skeleton-badge {
+  background: var(--accent-glow);
+  color: var(--accent-teal);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid var(--accent-teal);
+}
+
+.skeleton-container h2 {
+  font-size: 32px;
+  color: var(--text-primary);
+}
+
+.skeleton-container p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* A pulse animation to show something is 'happening' */
+.skeleton-loader {
+  width: 100px;
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-loader::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--accent-fill);
+  animation: loading-pulse 2s infinite ease-in-out;
+}
+
+@keyframes loading-pulse {
+  0% { left: -100%; }
+  50% { left: 0%; }
+  100% { left: 100%; }
+}

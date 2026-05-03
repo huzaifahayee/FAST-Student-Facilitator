@@ -1,0 +1,472 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import IosPickerField from '../components/IosPickerField';
+import { useFsfDialog } from '../components/FsfDialogProvider';
+import './BookExchange.css';
+
+const BOOK_CONDITION_OPTIONS = [
+  { value: 'New', label: 'New' },
+  { value: 'Like New', label: 'Like New' },
+  { value: 'Good', label: 'Good' },
+  { value: 'Fair', label: 'Fair' },
+];
+
+const BookExchange = ({ user }) => {
+  const { showAlert, showConfirm } = useFsfDialog();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('SELL');
+  const [books, setBooks] = useState([]);
+  const [isPosting, setIsPosting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [newBook, setNewBook] = useState({
+    bookTitle: '', author: '', courseCode: '',
+    bookCondition: 'Good', price: '', frontCoverImage: '', backCoverImage: '', listingType: 'SELL'
+  });
+  
+  const [validationError, setValidationError] = useState('');
+   const [editBookId, setEditBookId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [flashBookId, setFlashBookId] = useState(null);
+
+  const fetchBooks = async () => {
+    try {
+      let url = `http://localhost:8080/api/books?type=${activeTab === 'BUY' ? 'SELL' : activeTab}`;
+      if (searchQuery) {
+        url = `http://localhost:8080/api/books/search?query=${encodeURIComponent(searchQuery)}&type=${activeTab === 'BUY' ? 'SELL' : activeTab}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      setBooks(data);
+    } catch (err) {
+      console.error('Failed to fetch books', err);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load listings when tab/search changes
+    fetchBooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, searchQuery]);
+
+  useEffect(() => {
+    if (searchParams.get('book')) return;
+    const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link ?q= from global search
+    if (q !== null) setSearchQuery((prev) => (q !== prev ? q : prev));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get('book');
+    if (!raw) return;
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id)) return;
+
+    fetch(`http://localhost:8080/api/books/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Listing not found');
+        return res.json();
+      })
+      .then((book) => {
+        setActiveTab(book.listingType === 'BUY' ? 'BUY' : 'SELL');
+        setSearchQuery('');
+        setFlashBookId(id);
+      })
+      .catch(() => {})
+      .finally(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete('book');
+        const qs = next.toString();
+        navigate(`/marketplace${qs ? `?${qs}` : ''}`, { replace: true });
+      });
+  }, [searchParams, navigate]);
+
+  useEffect(() => {
+    if (!flashBookId) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`book-card-${flashBookId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.classList.add('deep-link-highlight');
+      window.setTimeout(() => el?.classList.remove('deep-link-highlight'), 2200);
+      setFlashBookId(null);
+    }, 140);
+    return () => window.clearTimeout(t);
+  }, [books, flashBookId]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchBooks();
+  };
+
+  const handleFlag = async (id) => {
+    const confirmed = await showConfirm({
+      title: 'Report listing',
+      message: 'Are you sure you want to report this listing? Misuse may lead to a ban.',
+      confirmText: 'Report',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      await fetch(`http://localhost:8080/api/books/${id}/flag`, { method: 'PUT' });
+      await showAlert({
+        title: 'Report submitted',
+        message: 'This listing has been reported for review.',
+      });
+      fetchBooks();
+    } catch (err) {
+      console.error("Failed to flag listing:", err);
+    }
+  };
+
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== 'image/png') {
+        void showAlert({ title: 'Invalid file', message: 'Please upload a PNG image.' });
+        e.target.value = null;
+        return;
+      }
+      try {
+        const base64 = await convertToBase64(file);
+        setNewBook({ ...newBook, [type]: base64 });
+      } catch (err) {
+        console.error("Image conversion failed", err);
+      }
+    }
+  };
+
+  const handlePostSubmit = async (e) => {
+    e.preventDefault();
+    if (!user?.email || !user?.name) {
+      setValidationError("Session identity missing. Please log in.");
+      return;
+    }
+
+    if (activeTab !== 'BUY' && (!newBook.frontCoverImage || !newBook.backCoverImage)) {
+      setValidationError("Please upload both front and back images of the book.");
+      return;
+    }
+
+    setValidationError('');
+
+    try {
+      const payload = {
+        ...newBook,
+        listingType: activeTab, // Post under current tab
+        ownerName: user.name,
+        ownerEmail: user.email,
+        price: newBook.price ? parseFloat(newBook.price) : 0.0
+      };
+
+      const url = editBookId 
+        ? `http://localhost:8080/api/books/${editBookId}` 
+        : 'http://localhost:8080/api/books';
+      
+      const method = editBookId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const wasEdit = !!editBookId;
+        setIsPosting(false);
+        setEditBookId(null);
+        await showAlert({
+          title: wasEdit ? 'Listing updated' : 'Listing submitted',
+          message: `Listing ${wasEdit ? 'updated' : 'submitted'}! It will appear once an Admin approves it.`,
+        });
+        fetchBooks();
+        setNewBook({
+          bookTitle: '', author: '', courseCode: '',
+          bookCondition: 'Good', price: '', frontCoverImage: '', backCoverImage: '', listingType: 'SELL'
+        });
+      } else {
+        setValidationError(`Failed to save listing (${res.status}).`);
+      }
+    } catch {
+      setValidationError('Network error while saving.');
+    }
+  };
+
+  const handleClose = async (id) => {
+    const ok = await showConfirm({
+      title: 'Close listing',
+      message: 'Mark this listing as closed/fulfilled?',
+      confirmText: 'Mark closed',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
+    try {
+      await fetch(`http://localhost:8080/api/books/${id}/close`, { method: 'PUT' });
+      fetchBooks();
+    } catch (err) {
+      console.error("Failed to close listing:", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const ok = await showConfirm({
+      title: 'Delete listing',
+      message: 'Are you sure you want to delete this listing?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await fetch(`http://localhost:8080/api/books/${id}?reason=User+deleted+own+listing`, { method: 'DELETE' });
+      fetchBooks();
+    } catch (err) {
+      console.error("Failed to delete listing:", err);
+    }
+  };
+
+  const handleEdit = (book) => {
+    setNewBook({
+      bookTitle: book.bookTitle,
+      author: book.author,
+      courseCode: book.courseCode,
+      bookCondition: book.bookCondition,
+      price: book.price || '',
+      frontCoverImage: book.frontCoverImage || '',
+      backCoverImage: book.backCoverImage || '',
+      listingType: book.listingType
+    });
+    setEditBookId(book.id);
+    setIsPosting(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="book-exchange-page">
+      <header className="book-exchange-header">
+        <h2>Book Exchange / Marketplace</h2>
+        <p>Buy, sell, or exchange academic books and materials.</p>
+        
+        <div className="tab-navigation">
+          {['SELL', 'BUY', 'EXCHANGE'].map(tab => (
+            <button 
+              key={tab}
+              className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => { setActiveTab(tab); setIsPosting(false); setEditBookId(null); setSearchQuery(''); }}
+            >
+              {tab === 'SELL' ? 'Sell Books' : tab === 'BUY' ? 'Buy Requests' : 'Exchange'}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className="marketplace-actions">
+        <form className="search-form" onSubmit={handleSearch}>
+          <input 
+            type="text" 
+            placeholder="Search by Title or Course Code..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button type="submit" className="secondary-btn">Search</button>
+        </form>
+        <button className="primary-btn" onClick={() => { setIsPosting(true); setEditBookId(null); setNewBook({ bookTitle: '', author: '', courseCode: '', bookCondition: 'Good', price: '', frontCoverImage: '', backCoverImage: '', listingType: 'SELL' }); }}>
+          Post {activeTab === 'SELL' ? 'a Book to Sell' : activeTab === 'BUY' ? 'a Buy Request' : 'an Exchange'}
+        </button>
+      </div>
+
+      {isPosting && (
+        <div className="post-form-container glass-card">
+          <div className="form-header">
+            <h3>{editBookId ? 'Edit' : 'Post a New'} {activeTab} Listing</h3>
+            {validationError && <p className="error-text">{validationError}</p>}
+          </div>
+          <form onSubmit={handlePostSubmit}>
+            <div className="form-grid">
+              <input type="text" placeholder="Book Title" required 
+                value={newBook.bookTitle} onChange={e => setNewBook({...newBook, bookTitle: e.target.value})} />
+              
+              <input type="text" placeholder="Author" required 
+                value={newBook.author} onChange={e => setNewBook({...newBook, author: e.target.value})} />
+              
+              <input type="text" placeholder="Course Code (e.g., CS201)" required 
+                value={newBook.courseCode} onChange={e => setNewBook({...newBook, courseCode: e.target.value})} />
+              
+              <IosPickerField
+                className="be-condition-picker"
+                value={newBook.bookCondition}
+                onChange={(v) => setNewBook({ ...newBook, bookCondition: v })}
+                options={BOOK_CONDITION_OPTIONS}
+                sheetTitle="Condition"
+                minWidth={160}
+              />
+
+              {activeTab !== 'EXCHANGE' && (
+                <input type="number" placeholder="Price (Rs.)" required min="0"
+                  value={newBook.price} onChange={e => setNewBook({...newBook, price: e.target.value})} />
+              )}
+
+              {activeTab !== 'BUY' && (
+                <>
+                  <div className="file-upload-group">
+                    <span className="file-upload-caption">Front Cover (PNG)</span>
+                    <label className="ios-file-field">
+                      <input
+                        className="ios-file-field-input"
+                        type="file"
+                        accept="image/png"
+                        onChange={(e) => handleFileChange(e, 'frontCoverImage')}
+                      />
+                      <span className="ios-file-field-btn">Choose Media</span>
+                      <span className="ios-file-field-name">
+                        {newBook.frontCoverImage ? 'Image attached' : 'No file chosen'}
+                      </span>
+                    </label>
+                    {newBook.frontCoverImage && <span className="upload-success">✓ Loaded</span>}
+                  </div>
+                  
+                  <div className="file-upload-group">
+                    <span className="file-upload-caption">Back Cover (PNG)</span>
+                    <label className="ios-file-field">
+                      <input
+                        className="ios-file-field-input"
+                        type="file"
+                        accept="image/png"
+                        onChange={(e) => handleFileChange(e, 'backCoverImage')}
+                      />
+                      <span className="ios-file-field-btn">Choose Media</span>
+                      <span className="ios-file-field-name">
+                        {newBook.backCoverImage ? 'Image attached' : 'No file chosen'}
+                      </span>
+                    </label>
+                    {newBook.backCoverImage && <span className="upload-success">✓ Loaded</span>}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="be-form-btns">
+              <button type="button" className="cancel-btn" onClick={() => { setIsPosting(false); setEditBookId(null); }}>Cancel</button>
+              <button type="submit" className="post-btn">{editBookId ? 'Save Changes' : 'Submit Listing'}</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <section className="listings-explorer">
+        <div className="listings-grid">
+          {books.length > 0 ? (
+            books.map((book) => (
+              <div
+                key={book.id}
+                id={`book-card-${book.id}`}
+                className={`book-card glass-card ${book.status === 'CLOSED' ? 'closed' : ''}`}
+              >
+                {book.frontCoverImage && book.backCoverImage ? (
+                  <div className="book-images-container">
+                    <div className="book-image" 
+                      style={{ backgroundImage: `url(${book.frontCoverImage})` }}
+                      onClick={() => setSelectedImage(book.frontCoverImage)}
+                    >
+                      <span className="image-label">FRONT</span>
+                    </div>
+                    <div className="book-image" 
+                      style={{ backgroundImage: `url(${book.backCoverImage})` }}
+                      onClick={() => setSelectedImage(book.backCoverImage)}
+                    >
+                      <span className="image-label">BACK</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="no-image-placeholder">
+                    <span>No Images Provided (Buy Request)</span>
+                  </div>
+                )}
+                <div className="book-content">
+                  <div className="book-header">
+                    <h4>{book.bookTitle}</h4>
+                    <span className={`status-badge ${book.status.toLowerCase()}`}>
+                      {book.status === 'CLOSED' ? 'Sold/Fulfilled' : 'Active'}
+                    </span>
+                  </div>
+                  <p className="author">by {book.author}</p>
+                  
+                  <div className="book-meta">
+                    <span className="tag course">{book.courseCode}</span>
+                    <span className="tag condition">{book.bookCondition}</span>
+                    {(book.listingType === 'SELL' || book.listingType === 'BUY') && (
+                      <span className="tag price">Rs. {book.price}</span>
+                    )}
+                  </div>
+                  
+                  <div className="book-footer">
+                    <div className="poster-info">
+                      <span className="label">Posted by:</span>
+                      <span className="email">{book.ownerEmail}</span>
+                    </div>
+                    <div className="actions">
+                      {activeTab === 'BUY' ? (
+                        <button
+                          type="button"
+                          className="primary-btn"
+                          style={{ padding: '0.4rem 1rem' }}
+                          onClick={() =>
+                            void showAlert({
+                              title: 'Contact seller',
+                              message: `Interested in buying? Contact the seller at:\n${book.ownerEmail}`,
+                            })
+                          }
+                        >
+                          🛒 BUY
+                        </button>
+                      ) : (
+                        book.ownerEmail === user?.email ? (
+                          <>
+                            <button className="close-btn" style={{marginRight: '0.5rem', color: 'var(--text-secondary)', borderColor: 'var(--text-secondary)'}} onClick={() => handleEdit(book)}>✏️ Edit</button>
+                            <button className="report-btn" style={{marginRight: '0.5rem'}} onClick={() => handleDelete(book.id)}>🗑️ Delete</button>
+                            {book.status === 'ACTIVE' && (
+                              <button className="close-btn" onClick={() => handleClose(book.id)}>Mark Closed</button>
+                            )}
+                          </>
+                        ) : (
+                          <button className="report-btn" onClick={() => handleFlag(book.id)}>🚩 Report</button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state glass-card">
+              <p>{activeTab === 'BUY' ? 'No available books found in the marketplace.' : `No ${activeTab.toLowerCase()} listings found.`}</p>
+              <p className="subtext">Check back later or {activeTab === 'BUY' ? 'post a buy request' : 'post your own'}!</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content">
+            <button className="close-modal" onClick={() => setSelectedImage(null)}>&times;</button>
+            <img src={selectedImage} alt="Full Screen Book" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BookExchange;

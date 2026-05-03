@@ -1,0 +1,371 @@
+/*
+  FAST Student Facilitator (FSF)
+  Global Design System
+
+  Dark mode: "Quantix" three-layer shell.
+    - Outer viewport: very dark with a crimson radial glow.
+    - Inner canvas: blackish panel (slightly lifted from viewport), big rounded corners.
+    - Floating cards: elevated charcoal, white text, soft crimson-tinted rim + depth shadow.
+
+  Light mode: pale blue shell + white surfaces (layout matches dark mode).
+    Navy gradient accents (--accent-fill) match the dashboard welcome strip.
+
+  Variable names are kept stable so per-page CSS does not need to change.
+*/
+
+@import './styles/FsfUiPrimitives.css';
+
+:root {
+  /* ============================================================
+     DEFAULT THEME = DARK (Quantix)
+     ============================================================ */
+
+  /* Outer viewport */
+  --bg-deep: #111111;
+  --bg-gradient: #111111;
+
+  /* Main app panel (was light platinum; now blackish for full dark mode) */
+  --canvas-bg: #0a0a0d;
+
+  /* Floating widgets — a step lighter than canvas for separation */
+  --card-bg: #14141a;
+
+  /* Surface tokens consumed by .glass-card and many page CSS files. */
+  --glass-bg: var(--card-bg);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-accent: rgba(255, 59, 83, 0.22);
+  --glass-blur: blur(0px);
+  --card-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 59, 83, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --card-shadow-hover:
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 0 28px rgba(255, 59, 83, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  /* Brand: crimson red. Variable name kept as --accent-teal to avoid
+     a global rename across every page CSS file. */
+  --accent-teal: #FF3B53;
+  --accent-glow: rgba(255, 59, 83, 0.35);
+  /* Filled CTAs (pills, avatars, primary buttons). Dark = flat brand red. */
+  --accent-fill: var(--accent-teal);
+  --accent-fill-hover: var(--accent-teal);
+
+  /* Typography on the dark canvas */
+  --text-primary: #f4f4f5;
+  --text-secondary: #b4b4be;
+  --text-muted: #7a7a86;
+
+  /* On-card text shades (used inside .glass-card) */
+  --text-on-card: #ffffff;
+  --text-on-card-secondary: rgba(255, 255, 255, 0.72);
+  --text-on-card-muted: rgba(255, 255, 255, 0.45);
+
+  /* Spacing & radius */
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --spacing-lg: 32px;
+  --spacing-md: 20px;
+  --spacing-sm: 12px;
+
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Inactive icon rail + matching chrome (topbar search glyph, etc.) */
+  --rail-nav-icon: rgba(255, 255, 255, 0.55);
+
+  /* Pill pair — Lost & Found tabs: same padding everywhere; white label on red CTAs */
+  --fsf-pill-pad-y: 12px;
+  --fsf-pill-pad-x: 28px;
+  --fsf-pill-radius: 999px;
+  --fsf-pill-cta-bg: var(--accent-fill);
+  --fsf-pill-cta-text: #ffffff;
+  --fsf-pill-cta-border: rgba(255, 255, 255, 0.22);
+  --fsf-pill-cta-shadow: 0 6px 20px rgba(255, 59, 83, 0.28);
+  --fsf-pill-muted-bg: rgba(255, 255, 255, 0.06);
+  --fsf-pill-muted-text: var(--text-secondary);
+  --fsf-pill-muted-border: rgba(255, 255, 255, 0.12);
+  --fsf-pill-muted-shadow: none;
+
+  /* Dark cards: frame = same language as welcome header (wine → charcoal), not solid red */
+  --glass-card-border-width: 4px;
+  --card-border-gradient: linear-gradient(
+    125deg,
+    #5a3a42 0%,
+    #3d252c 16%,
+    #241a1f 40%,
+    #121014 68%,
+    #0b0a0d 100%
+  );
+  --card-border-gradient-hover: linear-gradient(
+    125deg,
+    #6a454f 0%,
+    #4a2e36 18%,
+    #2a1e24 42%,
+    #16141a 70%,
+    #0e0c0f 100%
+  );
+}
+
+/* ============================================================
+   LIGHT MODE — sky blue + white (structure unchanged vs dark)
+   ============================================================ */
+[data-theme="light"] {
+  /* Viewport behind the shell card: white-forward, then feather into sky blue */
+  --bg-deep: #fbfdff;
+  --bg-gradient: linear-gradient(
+    160deg,
+    #ffffff 0%,
+    #fafdff 18%,
+    #f2f9fd 40%,
+    #e8f4fc 62%,
+    #dceefa 82%,
+    #cfe8f8 100%
+  );
+  --canvas-bg: #f5faff;
+  --card-bg: #ffffff;
+
+  --glass-bg: #ffffff;
+  --glass-border: rgba(2, 132, 199, 0.14);
+  /* Hover keeps same border weight — no bright blue “rim” on cards */
+  --glass-border-accent: rgba(2, 132, 199, 0.14);
+  --glass-blur: blur(14px);
+  /* One light-blue shadow tone for all elevations in light mode */
+  --light-elev: rgba(2, 132, 199, 0.12);
+  --card-shadow: 0 4px 20px var(--light-elev);
+  --card-shadow-hover: 0 12px 32px var(--light-elev), 0 4px 12px var(--light-elev);
+
+  /* Classical navy (same family as welcome banner); solid for type / hairlines */
+  --accent-gradient: linear-gradient(115deg, #0b2238 0%, #0f2d4a 42%, #143a5c 100%);
+  --accent-gradient-hover: linear-gradient(115deg, #0e2d48 0%, #123856 42%, #17466a 100%);
+  --accent-teal: #143a5c;
+  --accent-fill: var(--accent-gradient);
+  --accent-fill-hover: var(--accent-gradient-hover);
+  /* Match elevation shadows (pills, dots, focus halos) */
+  --accent-glow: var(--light-elev);
+
+  --text-primary: #0c2744;
+  --text-secondary: #3d5a73;
+  --text-muted: #64748b;
+
+  --text-on-card: #0c2744;
+  --text-on-card-secondary: #3d5a73;
+  --text-on-card-muted: #64748b;
+
+  --rail-nav-icon: rgba(11, 34, 56, 0.58);
+
+  --fsf-pill-pad-y: 12px;
+  --fsf-pill-pad-x: 28px;
+  --fsf-pill-radius: 999px;
+
+  --fsf-pill-cta-text: #ffffff;
+  --fsf-pill-cta-border: rgba(125, 211, 252, 0.28);
+  --fsf-pill-cta-shadow:
+    0 6px 18px rgba(12, 45, 72, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --fsf-pill-muted-bg: #ffffff;
+  --fsf-pill-muted-text: var(--accent-teal);
+  --fsf-pill-muted-border: rgba(20, 58, 92, 0.28);
+  --fsf-pill-muted-shadow: 0 2px 10px rgba(2, 132, 199, 0.06);
+}
+
+/* ============================================================
+   Global resets
+   ============================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-deep);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+[data-theme='light'] body {
+  background: var(--bg-gradient);
+}
+
+/* ============================================================
+   Reusable components
+   ============================================================ */
+
+/* The Glass Card: in dark mode this is a solid charcoal floating card;
+   in light mode it keeps the frosted-glass feel. Either way, the rule
+   below ensures text inside is readable for the surface it sits on. */
+.glass-card {
+  /* Inside any .glass-card, redefine the text vars so children written as
+     `color: var(--text-primary)` automatically pick up the on-card shades.
+     Dark mode: canvas text is light; card text stays high-contrast white.
+     Light mode: canvas and card both use dark type via --text-on-card. */
+  --text-primary: var(--text-on-card);
+  --text-secondary: var(--text-on-card-secondary);
+  --text-muted: var(--text-on-card-muted);
+
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.04) 0%, transparent 42%),
+    var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  color: var(--text-on-card);
+  box-shadow: var(--card-shadow);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--glass-border-accent);
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+[data-theme='light'] .glass-card {
+  background: var(--glass-bg);
+  background-clip: border-box;
+  -webkit-background-clip: border-box;
+}
+
+[data-theme='light'] .glass-card:hover {
+  border-color: var(--glass-border);
+  background: var(--glass-bg);
+}
+
+/*
+  Dark cards (except welcome header): gradient “border” via stacked backgrounds.
+  Welcome banner keeps its own fill + no frame (see Dashboard.css).
+*/
+[data-theme='dark'] .glass-card:not(.welcome-banner) {
+  border: var(--glass-card-border-width) solid transparent;
+  background: none;
+  background-image:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.04) 0%, transparent 42%),
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    var(--card-border-gradient);
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+  -webkit-background-clip: padding-box, padding-box, border-box;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 28px rgba(45, 28, 34, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+[data-theme='dark'] .glass-card:not(.welcome-banner):hover {
+  border-color: transparent;
+  background-image:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.055) 0%, transparent 42%),
+    linear-gradient(var(--glass-bg), var(--glass-bg)),
+    var(--card-border-gradient-hover);
+  background-clip: padding-box, padding-box, border-box;
+  -webkit-background-clip: padding-box, padding-box, border-box;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.62),
+    0 0 36px rgba(55, 32, 40, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* ============================================================
+   Pill actions — canonical look: Lost & Found tab row
+   ============================================================ */
+
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid var(--fsf-pill-cta-border);
+  background: var(--fsf-pill-cta-bg);
+  color: var(--fsf-pill-cta-text);
+  box-shadow: var(--fsf-pill-cta-shadow);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.primary-btn:hover:not(:disabled),
+.primary-btn:focus-visible:not(:disabled) {
+  transform: scale(1.06);
+  filter: brightness(1.04);
+}
+
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fsf-pill-pad-y) var(--fsf-pill-pad-x);
+  border-radius: var(--fsf-pill-radius);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid var(--fsf-pill-muted-border);
+  background: var(--fsf-pill-muted-bg);
+  color: var(--fsf-pill-muted-text);
+  box-shadow: var(--fsf-pill-muted-shadow);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.secondary-btn:hover:not(:disabled),
+.secondary-btn:focus-visible:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.secondary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Headings */
+h1, h2, h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent-fill); }

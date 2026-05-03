@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+target/
+backend/target/
+dist/
+frontend/dist/
+frontend/build/
+
+# IDE / editor
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / secrets (never commit real credentials — use .env.example as template only)
+.env
+.env.*
+frontend/.env
+backend/.env
+backend/application-local.properties
+!frontend/.env.example
+*.pem
+*.key
+
+# OS / misc temp
+*.tmp
+*.swp
+
+# Deliverable artifacts we don't want in git
+# (Kept: .docx / .pdf / SRS files in repo root as per team request)
+*.zip
+srs_temp/
+p1_temp/
+p2_temp/
+
+# Generated homepage snapshot (not part of source)
+fsf_dashboard_homepage.html
+
+# Optional: large vendored reference text
+admin_reqs.txt
+admin_reqs_utf8.txt

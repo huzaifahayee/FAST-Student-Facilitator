@@ -1,0 +1,173 @@
+/* 
+  FeatureCarousel.css
+  
+  What is this file?
+  Handles the horizontal swipe logic for the feature section.
+  We use 'CSS Scroll Snap' to make the swiping feel professional 
+  on touchpads and mobile devices.
+*/
+
+.carousel-view {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* Hide the scrollbar if we want a cleaner look */
+  padding: 10px 0;
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto; /* Enables horizontal scroll */
+  padding-bottom: 20px;
+  
+  /* Modern Scroll Snapping:
+     This makes the carousel 'snap' to the start of each card
+     as the user swipes, preventing cards from getting stuck halfway.
+  */
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Hides scrollbar on Firefox */
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none; /* Hides scrollbar on Chrome/Safari */
+}
+
+.feature-card-wrapper {
+  /*
+    Three cards per viewport width; flex gaps subtracted in calc().
+  */
+  flex: 0 0 calc((100% - (var(--spacing-md) * 2)) / 3);
+  scroll-snap-align: start;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 208px;
+  height: 100%;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+[data-theme='light'] .feature-card:hover {
+  border-color: var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.card-number {
+  font-size: 10px;
+  color: var(--accent-teal);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.feature-card h4 {
+  font-size: 20px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.feature-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Fixed on .carousel-view: stays put while cards slide underneath; hidden at end of track */
+.carousel-scroll-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(145deg, rgba(255, 59, 83, 0.95), rgba(200, 35, 55, 0.92));
+  box-shadow:
+    0 4px 16px rgba(255, 59, 83, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  animation: carousel-arrow-pulse 2.2s ease-in-out infinite;
+}
+
+.carousel-scroll-arrow:hover {
+  filter: brightness(1.08);
+  transform: translateY(-50%) scale(1.06);
+  box-shadow:
+    0 6px 22px rgba(255, 59, 83, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.carousel-scroll-arrow:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.carousel-scroll-arrow-icon {
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes carousel-arrow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(255, 59, 83, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 6px 22px rgba(255, 59, 83, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+}
+
+[data-theme='light'] .carousel-scroll-arrow {
+  background: var(--accent-fill);
+  box-shadow:
+    0 4px 16px var(--light-elev),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: carousel-arrow-pulse-light 2.2s ease-in-out infinite;
+}
+
+[data-theme='light'] .carousel-scroll-arrow:hover {
+  background: var(--accent-fill-hover);
+  box-shadow:
+    0 6px 20px var(--light-elev),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+@keyframes carousel-arrow-pulse-light {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(2, 132, 199, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 6px 22px rgba(2, 132, 199, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-scroll-arrow {
+    animation: none;
+  }
+}

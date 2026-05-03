@@ -1,0 +1,239 @@
+/* 
+  Dashboard.css
+  
+  What is this file?
+  Styles for the main dashboard content area.
+*/
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Admin Insights Styling */
+.admin-card {
+  border-left: 2px solid var(--accent-teal);
+  position: relative;
+}
+
+/* Links that wrap a stat card should feel like cards, not underlined text. */
+.stat-card-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.stat-card-link:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.stat-trend {
+  font-size: 11px;
+  font-weight: 700;
+  display: block;
+  margin-top: 4px;
+}
+
+.stat-trend.positive {
+  color: #10b981; /* Success Green */
+}
+
+.stat-trend.danger {
+  color: #ef4444; /* Alert Red */
+}
+
+/* Welcome banner: higher specificity so it wins over global .glass-card background */
+.welcome-banner.glass-card {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 44px 48px;
+  overflow: hidden;
+  /*
+    Dusty-rose -> deep crimson gradient over a charcoal base.
+    We layer two radial highlights (top-left bright coral, mid soft pink)
+    over a charcoal floor so the surface has depth instead of looking flat.
+  */
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 138, 154, 0.55) 0%, rgba(255, 138, 154, 0) 55%),
+    radial-gradient(80% 120% at 100% 100%, rgba(255, 59, 83, 0.35) 0%, rgba(255, 59, 83, 0) 60%),
+    linear-gradient(110deg, #2a1a1d 0%, #18181B 60%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 48px rgba(255, 59, 83, 0.22),
+    0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* Dark: no outer frame — seamless panel like the reference header */
+[data-theme='dark'] .welcome-banner.glass-card {
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 48px rgba(255, 59, 83, 0.22),
+    0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='dark'] .welcome-banner.glass-card:hover {
+  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 52px rgba(255, 59, 83, 0.26),
+    0 10px 36px rgba(0, 0, 0, 0.48);
+}
+
+/* Decorative soft blob in the bottom-right for extra polish */
+.welcome-banner.glass-card::after {
+  content: '';
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 59, 83, 0.45) 0%, rgba(255, 59, 83, 0) 70%);
+  pointer-events: none;
+}
+
+.welcome-banner.glass-card .banner-content,
+.welcome-banner.glass-card .banner-status {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-banner.glass-card h1 {
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.welcome-banner.glass-card p {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+.welcome-banner.glass-card .status-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+[data-theme='light'] .welcome-banner.glass-card {
+  /* Navy “hero” strip: white type + light-blue shadows (no flat white hover) */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.88);
+  --text-on-card: #ffffff;
+  --text-on-card-secondary: rgba(255, 255, 255, 0.86);
+  --text-on-card-muted: rgba(255, 255, 255, 0.62);
+
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(56, 189, 248, 0.16) 0%, transparent 54%),
+    radial-gradient(85% 100% at 100% 100%, rgba(14, 165, 233, 0.1) 0%, transparent 58%),
+    var(--accent-gradient);
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 16px rgba(125, 211, 252, 0.22),
+    0 18px 44px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme='light'] .welcome-banner.glass-card:hover {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(56, 189, 248, 0.2) 0%, transparent 54%),
+    radial-gradient(85% 100% at 100% 100%, rgba(14, 165, 233, 0.12) 0%, transparent 58%),
+    var(--accent-gradient-hover);
+  border-color: rgba(125, 211, 252, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 6px 22px rgba(125, 211, 252, 0.28),
+    0 22px 52px rgba(2, 132, 199, 0.24);
+}
+
+[data-theme='light'] .welcome-banner.glass-card::after {
+  opacity: 1;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(56, 189, 248, 0) 72%);
+}
+
+[data-theme='light'] .welcome-banner.glass-card h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='light'] .welcome-banner.glass-card p {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+[data-theme='light'] .welcome-banner.glass-card .status-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.status-badge {
+  background: var(--accent-glow);
+  color: var(--accent-teal);
+  padding: 6px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--accent-teal);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Section Header styling */
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.swipe-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Stats Grid styling */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+}
+
+.stat-card {
+  text-align: left;
+  padding: 24px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent-teal);
+}

@@ -1,0 +1,107 @@
+/* Stacked above in-app reminder modals when both could theoretically show */
+.fsf-dialog-backdrop.modal-backdrop.reminders-modal-backdrop {
+  z-index: 5300;
+}
+
+.fsf-dialog-shell.modal.glass-card.reminders-modal-sheet {
+  width: min(100vw - 2rem, 420px);
+  padding-bottom: 1.5rem;
+}
+
+.fsf-dialog-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #fff);
+}
+
+.fsf-dialog-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.82));
+  white-space: pre-line;
+}
+
+[data-theme='light'] .fsf-dialog-title {
+  color: var(--text-primary, #0c2744);
+}
+
+[data-theme='light'] .fsf-dialog-body {
+  color: var(--text-secondary, #3d5a73);
+}
+
+.fsf-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.35rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-family: var(--font-main, system-ui, sans-serif);
+}
+
+[data-theme='dark'] .fsf-dialog-input {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme='light'] .fsf-dialog-input {
+  border: 1px solid rgba(20, 58, 92, 0.16);
+  background: #fff;
+  color: var(--text-primary, #0c2744);
+}
+
+.fsf-dialog-input:focus {
+  outline: none;
+}
+
+[data-theme='dark'] .fsf-dialog-input:focus {
+  border-color: rgba(255, 59, 83, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 59, 83, 0.18);
+}
+
+[data-theme='light'] .fsf-dialog-input:focus {
+  border-color: rgba(2, 132, 199, 0.45);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+}
+
+.fsf-dialog-inline-error {
+  color: #f44336;
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+}
+
+.fsf-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='light'] .fsf-dialog-actions {
+  border-top-color: rgba(20, 58, 92, 0.12);
+}
+
+/* Same pill CTAs as index.css .primary-btn / .secondary-btn — layout-only tweaks here */
+.fsf-dialog-actions .fsf-dialog-action-btn {
+  flex: 0 0 auto;
+  min-width: 100px;
+}
+
+/* Destructive confirm — stays crimson pill like global primary */
+.fsf-dialog-primary-danger.primary-btn {
+  background: var(--accent-teal);
+  border: 1px solid var(--fsf-pill-cta-border);
+  color: var(--fsf-pill-cta-text);
+  box-shadow: var(--fsf-pill-cta-shadow);
+}
+
+[data-theme='light'] .fsf-dialog-primary-danger.primary-btn {
+  background: var(--accent-gradient);
+}

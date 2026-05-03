@@ -1,0 +1,107 @@
+/*
+  App.css — Quantix three-layer shell.
+
+    .app-shell    -> outermost dark viewport with a crimson radial glow
+    .app-canvas   -> rounded light platinum pane that holds the entire app
+    .icon-rail    -> slim left rail (defined in IconRail.css)
+    .main-viewport-> column for topbar + content
+
+  Light mode uses the same shell geometry as dark (16px inset, 24px radius);
+  colors stay pale blue / white with sky-tinted depth instead of crimson.
+*/
+
+.app-shell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+[data-theme='light'] .app-shell {
+  background: var(--bg-gradient);
+}
+
+/* Crimson radial glow — only in dark mode (light mode hides it) */
+.app-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 85% 95%,
+    rgba(255, 59, 83, 0.32),
+    transparent 55%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme='light'] .app-shell::before {
+  display: block;
+  background: radial-gradient(
+    circle at 78% 88%,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(186, 230, 253, 0.22) 38%,
+    transparent 58%
+  );
+  opacity: 1;
+}
+
+/* The "Glass pane": the entire app sits inside this rounded container */
+.app-canvas {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  margin: 16px;
+  height: calc(100vh - 32px);
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 59, 83, 0.09) 0%, transparent 52%),
+    linear-gradient(180deg, #0d0d11 0%, var(--canvas-bg) 45%, #08080b 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255, 59, 83, 0.12);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='light'] .app-canvas {
+  /* Match dark mode layout: same inset, height, and corner radius */
+  margin: 16px;
+  height: calc(100vh - 32px);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  box-shadow:
+    0 24px 72px rgba(2, 132, 199, 0.14),
+    0 8px 24px rgba(2, 132, 199, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  background:
+    radial-gradient(115% 60% at 50% 0%, rgba(255, 255, 255, 0.75) 0%, transparent 48%),
+    linear-gradient(180deg, #ffffff 0%, var(--canvas-bg) 42%, #e8f2fa 100%);
+}
+
+.main-viewport {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+/* Brief pulse when opening a card from global search deep-links */
+.deep-link-highlight {
+  outline: 2px solid var(--accent-fill);
+  outline-offset: 4px;
+  border-radius: 12px;
+  transition: outline-color 0.3s ease;
+}
