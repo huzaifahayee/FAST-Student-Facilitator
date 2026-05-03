@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useFsfDialog } from '../components/FsfDialogProvider';
+import IosPickerField from '../components/IosPickerField';
 import './CampusEventBoard.css';
 
 const CampusEventBoard = ({ user }) => {
@@ -151,7 +152,7 @@ const CampusEventBoard = ({ user }) => {
 
         const isEditing = editingId !== null;
         const url = isEditing
-            ? `http://localhost:8080/api/events/${editingId}?requesterEmail=${encodeURIComponent(user.email)}`
+            ? `http://localhost:8080/api/events/${editingId}?requesterEmail=${encodeURIComponent(user.email)}&requesterRole=${encodeURIComponent(user.role || '')}`
             : 'http://localhost:8080/api/events';
         const method = isEditing ? 'PUT' : 'POST';
 
@@ -272,22 +273,15 @@ const CampusEventBoard = ({ user }) => {
         (event.organizer || '').trim() === 'Administration';
 
     const semesterPlanRowClassName = (event) => {
-        const c = (event.category || '').toUpperCase();
-        if (c === 'ACADEMIC') return 'academic-row';
-        if (isImportedCalendarHoliday(event)) return 'semester-row-hero semester-row-holiday';
-        return 'semester-row-hero semester-row-event';
+        return 'academic-row';
     };
 
     /** 'holiday' only for plan-upload holidays; 'event' for Add Event (and other non-academic). */
     const semesterPlanHeroKind = (event) => {
-        const c = (event.category || '').toUpperCase();
-        if (c === 'ACADEMIC') return null;
-        if (isImportedCalendarHoliday(event)) return 'holiday';
-        return 'event';
+        return null;
     };
 
-    const canEdit = (event) =>
-        isAdmin || (user?.email && event.ownerEmail === user.email);
+    const canEdit = (event) => isAdmin;
 
     return (
         <div className="events-page">
@@ -430,49 +424,66 @@ const CampusEventBoard = ({ user }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2>{editingId ? 'Edit Event / Plan Item' : 'Post New Event / Plan Item'}</h2>
-                        <form onSubmit={handleSubmit}>
-                            <input type="text" name="title" placeholder="Event Title" value={formData.title} onChange={handleInputChange} required />
-                            <textarea name="description" placeholder="Short Description" value={formData.description} onChange={handleInputChange} required />
-
-                            <div className="field-with-hint">
-                                <label className="field-label" htmlFor="eventDate">Event Date</label>
-                                <input
-                                    id="eventDate"
-                                    type="date"
-                                    name="eventDate"
-                                    value={formData.eventDate}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                                <small className="field-hint">
-                                    {formData.eventDate
-                                        ? <>Selected: <strong>{formatPickedDate(formData.eventDate)}</strong></>
-                                        : 'Tip: use the calendar picker — typing day/month manually depends on your browser locale.'}
-                                </small>
+                        <form onSubmit={handleSubmit} className="campus-event-form">
+                            <div className="form-section">
+                                <label className="field-label">Event Details</label>
+                                <input type="text" name="title" placeholder="Event Title" value={formData.title} onChange={handleInputChange} required className="full-width" />
+                                <textarea name="description" placeholder="Describe the event..." value={formData.description} onChange={handleInputChange} required className="full-width" />
                             </div>
 
-                            <input type="text" name="venue" placeholder="Venue" value={formData.venue} onChange={handleInputChange} required />
-                            <input type="text" name="organizer" placeholder="Organizer" value={formData.organizer} onChange={handleInputChange} required />
-                            <select name="category" value={formData.category} onChange={handleInputChange}>
-                                <option value="ACADEMIC">Academic</option>
-                                <option value="SOCIAL">Social</option>
-                                <option value="SPORTS">Sports</option>
-                                <option value="HOLIDAY">Holiday</option>
-                            </select>
+                            <div className="form-row two-cols">
+                                <div className="field-group">
+                                    <label className="field-label">Venue</label>
+                                    <input type="text" name="venue" placeholder="e.g. Auditorium" value={formData.venue} onChange={handleInputChange} required />
+                                </div>
+                                <div className="field-group">
+                                    <label className="field-label">Organizer</label>
+                                    <input type="text" name="organizer" placeholder="Society / Dept" value={formData.organizer} onChange={handleInputChange} required />
+                                </div>
+                            </div>
 
-                            <label className="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    name="semesterPlan"
-                                    checked={formData.semesterPlan}
-                                    onChange={handleInputChange}
-                                />
-                                Also add to Semester Plan
-                            </label>
+                            <div className="form-row two-cols">
+                                <div className="field-group">
+                                    <label className="field-label">Event Date</label>
+                                    <input
+                                        type="date"
+                                        name="eventDate"
+                                        value={formData.eventDate}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="field-group">
+                                    <label className="field-label">Category</label>
+                                    <IosPickerField
+                                        value={formData.category}
+                                        onChange={(val) => setFormData({ ...formData, category: val })}
+                                        options={[
+                                            { value: 'ACADEMIC', label: 'Academic' },
+                                            { value: 'SOCIAL', label: 'Social' },
+                                            { value: 'SPORTS', label: 'Sports' },
+                                            { value: 'HOLIDAY', label: 'Holiday' },
+                                        ]}
+                                        sheetTitle="Select Category"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="semester-plan-checkbox-row">
+                                <label className="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        name="semesterPlan"
+                                        checked={formData.semesterPlan}
+                                        onChange={handleInputChange}
+                                    />
+                                    <span>Also add to Semester Plan</span>
+                                </label>
+                            </div>
 
                             <div className="form-actions">
-                                <button type="button" onClick={() => { setShowModal(false); setEditingId(null); }}>Cancel</button>
-                                <button type="submit" className="submit-btn">{editingId ? 'Save Changes' : 'Propose'}</button>
+                                <button type="button" className="cancel-btn" onClick={() => { setShowModal(false); setEditingId(null); }}>Cancel</button>
+                                <button type="submit" className="submit-btn">{editingId ? 'Save Changes' : 'Propose Event'}</button>
                             </div>
                         </form>
                     </div>

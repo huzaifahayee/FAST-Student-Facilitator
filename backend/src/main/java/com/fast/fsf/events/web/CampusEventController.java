@@ -149,13 +149,16 @@ public class CampusEventController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEvent(@PathVariable Long id,
                                          @RequestBody CampusEvent updated,
-                                         @RequestParam(required = false) String requesterEmail) {
+                                         @RequestParam(required = false) String requesterEmail,
+                                         @RequestParam(required = false) String requesterRole) {
         return eventRepository.findById(id).map(existing -> {
-            String requester = requesterEmail == null ? "" : requesterEmail;
-            boolean isOwner = existing.getOwnerEmail() != null && existing.getOwnerEmail().equalsIgnoreCase(requester);
-            boolean isAdmin = requester.toLowerCase().contains("admin");
-            if (!isOwner && !isAdmin) {
-                return ResponseEntity.status(403).body("Only the owner or an admin can edit this event.");
+            String requester = requesterEmail == null ? "" : requesterEmail.toLowerCase();
+            String role = requesterRole == null ? "" : requesterRole.toUpperCase();
+            
+            boolean isAdmin = requester.contains("admin") || role.equals("ADMIN");
+            
+            if (!isAdmin) {
+                return ResponseEntity.status(403).body("Only an admin can edit events.");
             }
 
             if (updated.getTitle() != null)       existing.setTitle(updated.getTitle());

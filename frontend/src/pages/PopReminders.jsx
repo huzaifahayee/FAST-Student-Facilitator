@@ -43,6 +43,8 @@ const PopReminders = ({ user }) => {
             const res = await fetch(`${API_BASE}?email=${encodeURIComponent(user.email)}`);
             const data = await res.json();
             setReminders(Array.isArray(data) ? data : []);
+            // Signal topbar to update notification dot
+            window.dispatchEvent(new CustomEvent('remindersUpdated'));
         } catch (err) {
             console.error('Error loading reminders', err);
         } finally {
@@ -87,6 +89,16 @@ const PopReminders = ({ user }) => {
         });
         setFormError('');
         setShowModal(true);
+    };
+
+    const setNow = () => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        setFormData(prev => ({ ...prev, reminderTime: `${y}-${m}-${day}T${h}:${min}` }));
     };
 
     const handleSubmit = async (e) => {
@@ -229,7 +241,7 @@ const PopReminders = ({ user }) => {
                         <h2>{editingId ? 'Edit Reminder' : 'Add Reminder'}</h2>
                         <form onSubmit={handleSubmit}>
                             <label className="form-label">
-                                Title <span className="req">*</span>
+                                <span>Title <span className="req">*</span></span>
                                 <input
                                     type="text"
                                     placeholder="e.g. OOP Assignment 3"
@@ -239,20 +251,24 @@ const PopReminders = ({ user }) => {
                                 />
                             </label>
 
-                            <label className="form-label">
-                                Date &amp; Time <span className="req">*</span>
+                            <div className="form-label">
+                                <div className="label-with-action">
+                                    <span>Date &amp; Time <span className="req">*</span></span>
+                                    <button 
+                                        type="button" 
+                                        className="set-now-btn"
+                                        onClick={setNow}
+                                    >
+                                        🕒 Add current date and time
+                                    </button>
+                                </div>
                                 <input
                                     type="datetime-local"
                                     value={formData.reminderTime}
                                     onChange={e => setFormData({ ...formData, reminderTime: e.target.value })}
                                     required
                                 />
-                                {formData.reminderTime && (
-                                    <small className="field-hint">
-                                        Selected: <strong>{formatWhen(formData.reminderTime)}</strong>
-                                    </small>
-                                )}
-                            </label>
+                            </div>
 
                             <div className="form-label">
                                 <span>Category <span className="req">*</span></span>

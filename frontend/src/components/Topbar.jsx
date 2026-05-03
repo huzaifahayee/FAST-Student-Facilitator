@@ -64,6 +64,30 @@ const Topbar = ({ theme, toggleTheme, user }) => {
 
     const activeLabel = ROUTE_LABELS[location.pathname] || 'FSF Portal';
 
+    const [hasActiveReminders, setHasActiveReminders] = useState(false);
+
+    useEffect(() => {
+        if (!user?.email) {
+            setHasActiveReminders(false);
+            return;
+        }
+
+        const checkReminders = async () => {
+            try {
+                const res = await fetch(`http://localhost:8080/api/reminders?email=${encodeURIComponent(user.email)}`);
+                const data = await res.json();
+                const pending = (data || []).some(r => (r.status || 'PENDING').toUpperCase() !== 'COMPLETED');
+                setHasActiveReminders(pending);
+            } catch (err) {
+                console.error('Error checking reminders for notification dot:', err);
+            }
+        };
+
+        checkReminders();
+        window.addEventListener('remindersUpdated', checkReminders);
+        return () => window.removeEventListener('remindersUpdated', checkReminders);
+    }, [user?.email]);
+
     useEffect(() => {
         /* eslint-disable react-hooks/set-state-in-effect -- derive dropdown lists from query */
         const q = query.trim();
@@ -416,7 +440,7 @@ const Topbar = ({ theme, toggleTheme, user }) => {
                     onClick={() => navigate('/reminders')}
                 >
                     <Bell size={18} strokeWidth={2} />
-                    <span className="notif-dot" aria-hidden="true" />
+                    {hasActiveReminders && <span className="notif-dot" aria-hidden="true" />}
                 </button>
 
                 <div className="user-pill" title={user?.email || ''}>

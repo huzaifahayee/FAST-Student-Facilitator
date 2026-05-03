@@ -111,31 +111,38 @@ public class CampusMapController {
      * Content-Type is inferred from extension (case-insensitive).
      * No ActivityLog entry — this is a static asset read, not a mutation.
      */
-    @GetMapping("/images/{filename}")
-    public ResponseEntity<byte[]> serveImage(@PathVariable String filename) {
+    /**
+     * GET /api/campus-map/images/{filename:.+}
+     *
+     * Serves a direction photo from:
+     *   backend/src/main/resources/static/campus-map-images/{filename}
+     */
+    @GetMapping("/images/{filename:.+}")
+    public ResponseEntity<?> serveImage(@PathVariable String filename) {
         try {
-            ClassPathResource resource = new ClassPathResource("static/campus-map-images/" + filename);
+            // We use ClassPathResource to find the image in the classpath
+            org.springframework.core.io.Resource resource = new ClassPathResource("static/campus-map-images/" + filename);
+            
             if (!resource.exists()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(("Image not found: " + filename).getBytes());
+                        .body("Image not found: " + filename);
             }
-            byte[] bytes = Files.readAllBytes(resource.getFile().toPath());
 
-            // Determine Content-Type based on extension (case-insensitive)
-            MediaType mediaType = MediaType.IMAGE_JPEG;
+            // Determine Content-Type based on extension
             String lower = filename.toLowerCase();
-            if (lower.endsWith(".png")) {
-                mediaType = MediaType.IMAGE_PNG;
-            } else if (lower.endsWith(".gif")) {
-                mediaType = MediaType.IMAGE_GIF;
-            } else if (lower.endsWith(".webp")) {
-                mediaType = MediaType.parseMediaType("image/webp");
-            }
+            MediaType mediaType = MediaType.IMAGE_JPEG;
+            if (lower.endsWith(".png")) mediaType = MediaType.IMAGE_PNG;
+            else if (lower.endsWith(".gif")) mediaType = MediaType.IMAGE_GIF;
+            else if (lower.endsWith(".webp")) mediaType = MediaType.parseMediaType("image/webp");
 
-            return ResponseEntity.ok().contentType(mediaType).body(bytes);
+            // Return the resource directly (Spring handles streaming)
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .body(new org.springframework.core.io.InputStreamResource(resource.getInputStream()));
+            
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(("Image not found: " + filename).getBytes());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error serving image: " + e.getMessage());
         }
     }
 
