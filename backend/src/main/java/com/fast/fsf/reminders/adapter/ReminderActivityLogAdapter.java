@@ -7,7 +7,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 /**
- * Adapter pattern (GoF): adapts the shared {@link ActivityLogRepository} to the feature's recording needs.
+ * Adapter pattern (GoF): adapts the shared {@link ActivityLogRepository} to the
+ * feature's recording needs.
  */
 @Component
 public class ReminderActivityLogAdapter {
