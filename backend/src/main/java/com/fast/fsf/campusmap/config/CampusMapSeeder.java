@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * CampusMapSeeder
+ * Singleton Pattern (via Spring's default bean scope).
+ * Ensures that only one instance of the seeder exists per JVM,
+ * managing the idempotent startup data initialization for the
+ * Campus Map feature.
  *
- * Runs on every application start-up.
- * Seeds campus_locations and campus_map_routes tables.
+ * Mirror: carpool/config/RideSeeder.java (hypothetical)
  */
 @Component
 public class CampusMapSeeder implements CommandLineRunner {
