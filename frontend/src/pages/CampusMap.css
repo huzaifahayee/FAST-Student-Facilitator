@@ -45,11 +45,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--glass-bg);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--glass-border);
-  border-radius: 999px;
-  padding: 10px 18px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 14px;
+  padding: 12px 18px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .map-search-bar {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(2, 132, 199, 0.15);
 }
 
 .map-search-bar:focus-within {
@@ -227,6 +232,11 @@
   gap: 6px;
 }
 
+.map-field-group .ios-category-dropdown {
+  width: 100%;
+  min-width: 0;
+}
+
 .map-field-label {
   font-size: 0.8rem;
   font-weight: 600;
@@ -236,26 +246,38 @@
 }
 
 .map-select {
-  background: var(--canvas-bg);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 14px;
   color: var(--text-primary);
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b4b4be' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a7a86' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
+  background-position: right 16px center;
+  padding-right: 42px;
+}
+
+[data-theme="light"] .map-select {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(2, 132, 199, 0.15);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233d5a73' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .map-select:focus {
   border-color: var(--accent-teal);
   box-shadow: 0 0 0 3px var(--accent-glow);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .map-select:focus {
+  background: #fff;
+  border-color: var(--accent-teal);
 }
 
 .map-select:disabled {
@@ -959,15 +981,22 @@
 .suggest-input,
 .suggest-select,
 .suggest-textarea {
-  background: var(--canvas-bg);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 14px;
   color: var(--text-primary);
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .suggest-input,
+[data-theme="light"] .suggest-select,
+[data-theme="light"] .suggest-textarea {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(2, 132, 199, 0.15);
 }
 
 .suggest-input:focus,
@@ -975,6 +1004,14 @@
 .suggest-textarea:focus {
   border-color: var(--accent-teal);
   box-shadow: 0 0 0 3px var(--accent-glow);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .suggest-input:focus,
+[data-theme="light"] .suggest-select:focus,
+[data-theme="light"] .suggest-textarea:focus {
+  background: #fff;
+  border-color: var(--accent-teal);
 }
 
 .suggest-input.error,
@@ -987,10 +1024,14 @@
 
 .suggest-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b4b4be' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a7a86' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
+  background-position: right 16px center;
+  padding-right: 42px;
+}
+
+[data-theme="light"] .suggest-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%233d5a73' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 .field-error-text {
